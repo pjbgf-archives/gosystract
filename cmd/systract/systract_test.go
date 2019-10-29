@@ -1,4 +1,4 @@
-package systrac
+package systract
 
 import (
 	"os"

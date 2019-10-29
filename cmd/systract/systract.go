@@ -1,4 +1,4 @@
-package systrac
+package systract
 
 import (
 	"bufio"
@@ -22,26 +22,26 @@ var (
 	symbols map[string]symbolDefinition
 )
 
-type symbolDefinition struct {
-	syscallIDs []uint16
-	subCalls   []string
-}
-
 const (
 	symbolDefinitionRegex string = "TEXT.((\\%|\\(|\\)|\\*|[a-zA-Z0-9_.\\/])+)\\b\\("
 	syscallHexIDRegex     string = "MOV(Q|L).\\$0x([0-9a-fA-F]+)"
 	callCaptureRegex      string = ".+CALL.(\\b([a-zA-Z0-9_.\\/]|\\.|\\(\\*[a-zA-Z0-9_.\\/]+\\))+\\b)+"
 )
 
-func init() {
-	processedNames, processedIDs = make(map[string]bool), make(map[uint16]bool)
-	symbols = make(map[string]symbolDefinition)
-}
-
 // SystemCall represents a system call
 type SystemCall struct {
 	ID   uint16
 	Name string
+}
+
+type symbolDefinition struct {
+	syscallIDs []uint16
+	subCalls   []string
+}
+
+func init() {
+	processedNames, processedIDs = make(map[string]bool), make(map[uint16]bool)
+	symbols = make(map[string]symbolDefinition)
 }
 
 // Extract returns all system calls made in the execution path of the dumpFile provided.
