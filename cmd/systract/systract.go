@@ -2,14 +2,15 @@ package systract
 
 import (
 	"bufio"
-	"errors"
 	"os"
+	"path"
 	"path/filepath"
 	"regexp"
 	"strconv"
 	"sync"
 
 	"github.com/golang-collections/collections/stack"
+	"github.com/pkg/errors"
 )
 
 var (
@@ -47,7 +48,11 @@ func init() {
 // Extract returns all system calls made in the execution path of the dumpFile provided.
 func Extract(dumpFileName string) ([]SystemCall, error) {
 
-	if !fileExists(dumpFileName) {
+	filePath, err := sanitiseFileName(dumpFileName)
+	if err != nil {
+		return nil, err
+	}
+	if !fileExists(filePath) {
 		return nil, errors.New("file does not exist or permission denied")
 	}
 
@@ -59,7 +64,7 @@ func Extract(dumpFileName string) ([]SystemCall, error) {
 		})
 	}
 
-	parseFile(dumpFileName)
+	parseFile(filePath)
 	if !isExecutable() {
 		return nil, errors.New("libraries are currently not supported")
 	}
@@ -81,15 +86,28 @@ func processExecutable(consume func(id uint16)) {
 }
 
 func fileExists(fileName string) bool {
-	if _, err := os.Stat(filepath.Clean(fileName)); err == nil {
+	if _, err := os.Stat(fileName); err == nil {
 		return true
 	}
 
 	return false
 }
 
-func parseFile(dumpFileName string) {
-	file, err := os.Open(dumpFileName)
+func sanitiseFileName(input string) (string, error) {
+	if !path.IsAbs(input) {
+		base, err := os.Getwd()
+		if err != nil {
+			return "", errors.Wrap(err, "error getting current folder")
+		}
+
+		return filepath.Join(base, filepath.Clean(input)), nil
+	}
+	return input, nil
+}
+
+func parseFile(filePath string) {
+	/* #nosec filePath is pre-processed by sanitiseFileName */
+	file, err := os.Open(filePath)
 	if err != nil {
 		panic(file)
 	}

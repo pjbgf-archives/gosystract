@@ -25,7 +25,7 @@ func TestExtract_FileDoesNotExist(t *testing.T) {
 
 func TestExtract_E2E_LibrariesNotSupported(t *testing.T) {
 	assert := assert.New(t)
-	fileName, _ := filepath.Abs("test/systrac.dump")
+	fileName, _ := filepath.Abs("../../test/systrac.dump")
 
 	if _, err := os.Stat(fileName); err != nil {
 		assert.Fail("test cannot run because systrac sample file does not exist")
@@ -39,7 +39,7 @@ func TestExtract_E2E_LibrariesNotSupported(t *testing.T) {
 
 func TestExtract_E2E_Executable(t *testing.T) {
 	assert := assert.New(t)
-	fileName, _ := filepath.Abs("test/keyring.dump")
+	fileName, _ := filepath.Abs("../../test/keyring.dump")
 
 	if _, err := os.Stat(fileName); err != nil {
 		assert.Fail("test cannot run because keyring sample file does not exist")
