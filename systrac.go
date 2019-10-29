@@ -2,7 +2,9 @@ package systrac
 
 import (
 	"bufio"
+	"errors"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"sync"
@@ -11,12 +13,11 @@ import (
 )
 
 var (
-	dumpFileName string
-
-	processedNames map[string]bool
-	namesMutex     sync.RWMutex
-	processedIDs   map[uint16]bool
-	idsMutex       sync.RWMutex
+	executableSymbolCalls = []string{"main.init.0", "main.init.1", "main.main"}
+	processedNames        map[string]bool
+	namesMutex            sync.RWMutex
+	processedIDs          map[uint16]bool
+	idsMutex              sync.RWMutex
 
 	symbols map[string]symbolDefinition
 )
@@ -27,11 +28,9 @@ type symbolDefinition struct {
 }
 
 const (
-	symbolDefinitionRegex    string = "TEXT.(\\b([a-zA-Z0-9_.\\/]|\\.|\\(\\*[a-zA-Z0-9_.\\/]+\\))+\\b)\\("
-	golangSyscallHexIDRegex  string = "MOVQ.\\$0x([0-9a-fA-F]+)"
-	syscallHexIDRegex        string = "MOVL.\\$0x([0-9a-fA-F]+)"
-	callCaptureRegex         string = ".+CALL.(\\b([a-zA-Z0-9_.\\/]|\\.|\\(\\*[a-zA-Z0-9_.\\/]+\\))+\\b)+"
-	callsFromEntryPointRegex string = "main.go" + callCaptureRegex
+	symbolDefinitionRegex string = "TEXT.((\\%|\\(|\\)|\\*|[a-zA-Z0-9_.\\/])+)\\b\\("
+	syscallHexIDRegex     string = "MOV(Q|L).\\$0x([0-9a-fA-F]+)"
+	callCaptureRegex      string = ".+CALL.(\\b([a-zA-Z0-9_.\\/]|\\.|\\(\\*[a-zA-Z0-9_.\\/]+\\))+\\b)+"
 )
 
 func init() {
@@ -39,33 +38,57 @@ func init() {
 	symbols = make(map[string]symbolDefinition)
 }
 
+// SystemCall represents a system call
 type SystemCall struct {
 	ID   uint16
 	Name string
 }
 
-func Extract(dumpFileName string) []SystemCall {
+// Extract returns all system calls made in the execution path of the dumpFile provided.
+func Extract(dumpFileName string) ([]SystemCall, error) {
+
+	if !fileExists(dumpFileName) {
+		return nil, errors.New("file does not exist or permission denied")
+	}
+
 	syscalls := make([]SystemCall, 0)
 	consume := func(id uint16) {
 		syscalls = append(syscalls, SystemCall{
 			ID:   id,
-			Name: SystemCalls[id],
+			Name: systemCalls[id],
 		})
 	}
 
-	parseFile()
-
-	symbolCalls := []string{"main.init.0", "main.init.1", "main.main"}
-	for _, symbol := range symbolCalls {
-		processPerStage(symbol, consume)
+	parseFile(dumpFileName)
+	if !isExecutable() {
+		return nil, errors.New("libraries are currently not supported")
 	}
+	processExecutable(consume, executableSymbolCalls)
 
-	return syscalls
+	return syscalls, nil
 }
 
-func parseFile() {
+func isExecutable() bool {
+	_, ok := symbols["main.main"]
+	return ok
+}
 
-	dumpFileName = "keyring" //os.Args[1]
+// kick off process from executable key entry points.
+func processExecutable(consume func(id uint16), executableSymbolCalls []string) {
+	for _, symbol := range executableSymbolCalls {
+		processDump(symbol, consume)
+	}
+}
+
+func fileExists(fileName string) bool {
+	if _, err := os.Stat(filepath.Clean(fileName)); err == nil {
+		return true
+	}
+
+	return false
+}
+
+func parseFile(dumpFileName string) {
 	file, err := os.Open(dumpFileName)
 	if err != nil {
 		panic(file)
@@ -76,7 +99,7 @@ func parseFile() {
 	for scanner.Scan() {
 		line := scanner.Text()
 
-		symbolName, found := GetSymbolName(line)
+		symbolName, found := getSymbolName(line)
 		stack := stack.New()
 		symbol := symbolDefinition{
 			subCalls:   make([]string, 0),
@@ -87,21 +110,21 @@ func parseFile() {
 			if scanner.Scan() {
 				line = scanner.Text()
 
-				if IsEndOfSymbol(line) {
+				if isEndOfSymbol(line) {
 					break
 				}
 
-				if id, found := TryGetSyscallID(line, stack); found {
+				if id, found := tryPopSyscallID(line, stack); found {
 					symbol.syscallIDs = append(symbol.syscallIDs, id)
 					continue
 				}
 
-				if subcall, found := GetCallTarget(line); found {
+				if subcall, found := getCallTarget(line); found {
 					symbol.subCalls = append(symbol.subCalls, subcall)
 					continue
 				}
 
-				StackSyscallIDIfNecessary(line, stack)
+				stackSyscallIDIfNecessary(line, stack)
 			} else {
 				break
 			}
@@ -113,11 +136,12 @@ func parseFile() {
 	}
 }
 
-func processPerStage(symbolName string, consume func(uint16)) {
+func processDump(symbolName string, consume func(uint16)) {
 	var (
 		sysCallIDs = make(chan uint16)
 		done       = make(chan struct{})
 	)
+
 	go func() {
 		defer close(sysCallIDs)
 
@@ -131,7 +155,6 @@ func processPerStage(symbolName string, consume func(uint16)) {
 			namesMutex.Unlock()
 
 			if s, found := symbols[symbolName]; found {
-
 				for _, id := range s.syscallIDs {
 					idsMutex.RLock()
 					_, exists := processedIDs[id]
@@ -147,8 +170,7 @@ func processPerStage(symbolName string, consume func(uint16)) {
 				}
 
 				for _, name := range s.subCalls {
-
-					processPerStage(name, consume)
+					processDump(name, consume)
 				}
 			}
 		}
@@ -165,15 +187,15 @@ func processPerStage(symbolName string, consume func(uint16)) {
 	<-done
 }
 
-func StackSyscallIDIfNecessary(assemblyLine string, s *stack.Stack) {
-	if id, ok := GetSyscallID(assemblyLine); ok {
+func stackSyscallIDIfNecessary(assemblyLine string, s *stack.Stack) {
+	if id, ok := getSyscallID(assemblyLine); ok {
 		s.Push(id)
 	}
 }
 
-func TryGetSyscallID(assemblyLine string, s *stack.Stack) (uint16, bool) {
+func tryPopSyscallID(assemblyLine string, s *stack.Stack) (uint16, bool) {
 
-	if s.Len() > 0 && ContainsSyscall(assemblyLine) {
+	if s.Len() > 0 && containsSyscall(assemblyLine) {
 		val1 := s.Pop()
 		val2 := s.Pop()
 
@@ -187,23 +209,14 @@ func TryGetSyscallID(assemblyLine string, s *stack.Stack) (uint16, bool) {
 	return 0, false
 }
 
-func GetSyscallID(assemblyLine string) (uint16, bool) {
-
-	if id, ok := getSyscallID(assemblyLine, syscallHexIDRegex); ok {
-		return id, ok
-	}
-
-	return getSyscallID(assemblyLine, golangSyscallHexIDRegex)
-}
-
-func getSyscallID(assemblyLine, regex string) (uint16, bool) {
-	re := regexp.MustCompile(regex)
+func getSyscallID(assemblyLine string) (uint16, bool) {
+	re := regexp.MustCompile(syscallHexIDRegex)
 	captures := re.FindStringSubmatch(assemblyLine)
 
 	if captures != nil && len(captures) > 0 {
-		if n, err := strconv.ParseUint(captures[1], 16, 16); err == nil {
+		if n, err := strconv.ParseUint(captures[2], 16, 16); err == nil {
 			id := uint16(n)
-			if _, exists := SystemCalls[id]; exists {
+			if _, exists := systemCalls[id]; exists {
 				return id, true
 			}
 		}
@@ -212,7 +225,7 @@ func getSyscallID(assemblyLine, regex string) (uint16, bool) {
 	return 0, false
 }
 
-func GetSymbolName(assemblyLine string) (string, bool) {
+func getSymbolName(assemblyLine string) (string, bool) {
 	re := regexp.MustCompile(symbolDefinitionRegex)
 	captures := re.FindStringSubmatch(assemblyLine)
 
@@ -223,7 +236,7 @@ func GetSymbolName(assemblyLine string) (string, bool) {
 	return "", false
 }
 
-func GetCallTarget(assemblyLine string) (string, bool) {
+func getCallTarget(assemblyLine string) (string, bool) {
 	re := regexp.MustCompile(callCaptureRegex)
 	captures := re.FindStringSubmatch(assemblyLine)
 
@@ -234,34 +247,20 @@ func GetCallTarget(assemblyLine string) (string, bool) {
 	return "", false
 }
 
-func IsSymbolDefinition(assemblyLine string) bool {
-	re := regexp.MustCompile(symbolDefinitionRegex)
-	captures := re.FindStringSubmatch(assemblyLine)
-
-	return (captures != nil && len(captures) > 0)
-}
-
-func IsSymbolDefinition2(assemblyLine, symbolName string) bool {
-	re := regexp.MustCompile("TEXT." + regexp.QuoteMeta(symbolName) + "\\(")
-	captures := re.FindStringSubmatch(assemblyLine)
-
-	return (captures != nil && len(captures) > 0)
-}
-
-func ContainsSyscall(assemblyLine string) bool {
+func containsSyscall(assemblyLine string) bool {
 	re := regexp.MustCompile("SYSCALL|golang.org/x/sys/unix.Syscall|syscall.Syscall")
 	captures := re.FindStringSubmatch(assemblyLine)
 
 	return (captures != nil && len(captures) > 0)
 }
 
-func IsEndOfSymbol(line string) bool {
+func isEndOfSymbol(line string) bool {
 	return (line == "" || line == "\n")
 }
 
-// SystemCalls is a map of system calls IDs and Names
+// systemCalls is a map of system calls IDs and Names
 // Source: https://raw.githubusercontent.com/torvalds/linux/master/arch/x86/entry/syscalls/syscall_64.tbl
-var SystemCalls = map[uint16]string{
+var systemCalls = map[uint16]string{
 	0:   "read",
 	1:   "write",
 	2:   "open",
