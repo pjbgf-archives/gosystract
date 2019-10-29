@@ -9,5 +9,3 @@ mkdir -p /tmp/$GOSECNAME
 tar -C /tmp/$GOSECNAME -xzf /tmp/$GOSECNAME.tar.gz
 
 /tmp/$GOSECNAME/gosec -conf gosec.json ./...
-
-rm -d -f -r /tmp/$GOSECNAME
