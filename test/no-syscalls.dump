@@ -1,0 +1,139 @@
+TEXT main.main(SB) /media/pjb/src/git/learn-golang/syscalls/keyring.go
+  keyring.go:9		0x495c70		64488b0c25f8ffffff	MOVQ FS:0xfffffff8, CX										
+  keyring.go:9		0x495c79		483b6110		CMPQ 0x10(CX), SP										
+  keyring.go:9		0x495c7d		0f860d020000		JBE 0x495e90											
+  keyring.go:9		0x495c83		4883ec78		SUBQ $0x78, SP											
+  keyring.go:9		0x495c87		48896c2470		MOVQ BP, 0x70(SP)										
+  keyring.go:9		0x495c8c		488d6c2470		LEAQ 0x70(SP), BP										
+  keyring.go:9		0x495c91		b8a0860100		MOVL $0x186a0, AX										
+  keyring.go:11		0x495c96		eb09			JMP 0x495ca1											
+  keyring.go:11		0x495c98		488b4c2448		MOVQ 0x48(SP), CX										
+  keyring.go:11		0x495c9d		488d41ff		LEAQ -0x1(CX), AX										
+  keyring.go:11		0x495ca1		4885c0			TESTQ AX, AX											
+  keyring.go:11		0x495ca4		0f8edc010000		JLE 0x495e86											
+  keyring.go:11		0x495caa		4889442448		MOVQ AX, 0x48(SP)										
+  keyring.go:12		0x495caf		90			NOPL												
+  keyring.go:98		0x495cb0		c70424fdffffff		MOVL $-0x3, 0(SP)										
+  keyring.go:98		0x495cb7		e8f4f4ffff		CALL github.com/jsipprell/keyctl.newKeyring(SB)							
+  keyring.go:12		0x495cbc		488b442410		MOVQ 0x10(SP), AX										
+  keyring.go:12		0x495cc1		488b4c2418		MOVQ 0x18(SP), CX										
+  keyring.go:12		0x495cc6		488b542408		MOVQ 0x8(SP), DX										
+  keyring.go:12		0x495ccb		4889542458		MOVQ DX, 0x58(SP)										
+  keyring.go:13		0x495cd0		4885c0			TESTQ AX, AX											
+  keyring.go:13		0x495cd3		7438			JE 0x495d0d											
+  keyring.go:14		0x495cd5		7404			JE 0x495cdb											
+  keyring.go:14		0x495cd7		488b4008		MOVQ 0x8(AX), AX										
+  keyring.go:14		0x495cdb		0f57c0			XORPS X0, X0											
+  keyring.go:14		0x495cde		0f11442460		MOVUPS X0, 0x60(SP)										
+  keyring.go:14		0x495ce3		4889442460		MOVQ AX, 0x60(SP)										
+  keyring.go:14		0x495ce8		48894c2468		MOVQ CX, 0x68(SP)										
+  keyring.go:14		0x495ced		488d442460		LEAQ 0x60(SP), AX										
+  keyring.go:14		0x495cf2		48890424		MOVQ AX, 0(SP)											
+  keyring.go:14		0x495cf6		48c744240801000000	MOVQ $0x1, 0x8(SP)										
+  keyring.go:14		0x495cff		48c744241001000000	MOVQ $0x1, 0x10(SP)										
+  keyring.go:14		0x495d08		e863cfffff		CALL log.Fatal(SB)										
+  keyring.go:17		0x495d0d		488d056c4b0100		LEAQ 0x14b6c(IP), AX										
+  keyring.go:17		0x495d14		48890424		MOVQ AX, 0(SP)											
+  keyring.go:17		0x495d18		e8c358f7ff		CALL runtime.newobject(SB)									
+  keyring.go:17		0x495d1d		488b442408		MOVQ 0x8(SP), AX										
+  keyring.go:17		0x495d22		8b0d40b70400		MOVL main.statictmp_0(SB), CX									
+  keyring.go:17		0x495d28		8908			MOVL CX, 0(AX)											
+  keyring.go:18		0x495d2a		488d0d6fdb0400		LEAQ go.itab.*github.com/jsipprell/keyctl.keyring,github.com/jsipprell/keyctl.Keyring(SB), CX	
+  keyring.go:18		0x495d31		8401			TESTB AL, 0(CX)											
+  keyring.go:18		0x495d33		488b542458		MOVQ 0x58(SP), DX										
+  keyring.go:18		0x495d38		48891424		MOVQ DX, 0(SP)											
+  keyring.go:18		0x495d3c		488d1d34450300		LEAQ 0x34534(IP), BX										
+  keyring.go:18		0x495d43		48895c2408		MOVQ BX, 0x8(SP)										
+  keyring.go:18		0x495d48		48c744241009000000	MOVQ $0x9, 0x10(SP)										
+  keyring.go:18		0x495d51		4889442418		MOVQ AX, 0x18(SP)										
+  keyring.go:18		0x495d56		48c744242004000000	MOVQ $0x4, 0x20(SP)										
+  keyring.go:18		0x495d5f		48c744242804000000	MOVQ $0x4, 0x28(SP)										
+  keyring.go:18		0x495d68		e893e7ffff		CALL github.com/jsipprell/keyctl.(*keyring).Add(SB)						
+  keyring.go:18		0x495d6d		488b442440		MOVQ 0x40(SP), AX										
+  keyring.go:18		0x495d72		488b4c2438		MOVQ 0x38(SP), CX										
+  keyring.go:19		0x495d77		4885c9			TESTQ CX, CX											
+  keyring.go:19		0x495d7a		7438			JE 0x495db4											
+  keyring.go:20		0x495d7c		7404			JE 0x495d82											
+  keyring.go:20		0x495d7e		488b4908		MOVQ 0x8(CX), CX										
+  keyring.go:20		0x495d82		0f57c0			XORPS X0, X0											
+  keyring.go:20		0x495d85		0f11442460		MOVUPS X0, 0x60(SP)										
+  keyring.go:20		0x495d8a		48894c2460		MOVQ CX, 0x60(SP)										
+  keyring.go:20		0x495d8f		4889442468		MOVQ AX, 0x68(SP)										
+  keyring.go:20		0x495d94		488d442460		LEAQ 0x60(SP), AX										
+  keyring.go:20		0x495d99		48890424		MOVQ AX, 0(SP)											
+  keyring.go:20		0x495d9d		48c744240801000000	MOVQ $0x1, 0x8(SP)										
+  keyring.go:20		0x495da6		48c744241001000000	MOVQ $0x1, 0x10(SP)										
+  keyring.go:20		0x495daf		e8bcceffff		CALL log.Fatal(SB)										
+  keyring.go:23		0x495db4		488b442458		MOVQ 0x58(SP), AX										
+  keyring.go:23		0x495db9		48890424		MOVQ AX, 0(SP)											
+  keyring.go:23		0x495dbd		488d05b3440300		LEAQ 0x344b3(IP), AX										
+  keyring.go:23		0x495dc4		4889442408		MOVQ AX, 0x8(SP)										
+  keyring.go:23		0x495dc9		48c744241009000000	MOVQ $0x9, 0x10(SP)										
+  keyring.go:23		0x495dd2		e8c9e8ffff		CALL github.com/jsipprell/keyctl.(*keyring).Search(SB)						
+  keyring.go:23		0x495dd7		488b442428		MOVQ 0x28(SP), AX										
+  keyring.go:23		0x495ddc		488b4c2418		MOVQ 0x18(SP), CX										
+  keyring.go:23		0x495de1		48894c2450		MOVQ CX, 0x50(SP)										
+  keyring.go:23		0x495de6		488b542420		MOVQ 0x20(SP), DX										
+  keyring.go:24		0x495deb		4885d2			TESTQ DX, DX											
+  keyring.go:24		0x495dee		7438			JE 0x495e28											
+  keyring.go:25		0x495df0		7404			JE 0x495df6											
+  keyring.go:25		0x495df2		488b5208		MOVQ 0x8(DX), DX										
+  keyring.go:25		0x495df6		0f57c0			XORPS X0, X0											
+  keyring.go:25		0x495df9		0f11442460		MOVUPS X0, 0x60(SP)										
+  keyring.go:25		0x495dfe		4889542460		MOVQ DX, 0x60(SP)										
+  keyring.go:25		0x495e03		4889442468		MOVQ AX, 0x68(SP)										
+  keyring.go:25		0x495e08		488d442460		LEAQ 0x60(SP), AX										
+  keyring.go:25		0x495e0d		48890424		MOVQ AX, 0(SP)											
+  keyring.go:25		0x495e11		48c744240801000000	MOVQ $0x1, 0x8(SP)										
+  keyring.go:25		0x495e1a		48c744241001000000	MOVQ $0x1, 0x10(SP)										
+  keyring.go:25		0x495e23		e848ceffff		CALL log.Fatal(SB)										
+  keyring.go:28		0x495e28		488b442450		MOVQ 0x50(SP), AX										
+  keyring.go:28		0x495e2d		48890424		MOVQ AX, 0(SP)											
+  keyring.go:28		0x495e31		e81ae4ffff		CALL github.com/jsipprell/keyctl.(*Key).Get(SB)							
+  keyring.go:28		0x495e36		488b442428		MOVQ 0x28(SP), AX										
+  keyring.go:28		0x495e3b		488b4c2420		MOVQ 0x20(SP), CX										
+  keyring.go:29		0x495e40		4885c9			TESTQ CX, CX											
+  keyring.go:29		0x495e43		0f844ffeffff		JE 0x495c98											
+  keyring.go:30		0x495e49		7404			JE 0x495e4f											
+  keyring.go:30		0x495e4b		488b4908		MOVQ 0x8(CX), CX										
+  keyring.go:30		0x495e4f		0f57c0			XORPS X0, X0											
+  keyring.go:30		0x495e52		0f11442460		MOVUPS X0, 0x60(SP)										
+  keyring.go:30		0x495e57		48894c2460		MOVQ CX, 0x60(SP)										
+  keyring.go:30		0x495e5c		4889442468		MOVQ AX, 0x68(SP)										
+  keyring.go:30		0x495e61		488d442460		LEAQ 0x60(SP), AX										
+  keyring.go:30		0x495e66		48890424		MOVQ AX, 0(SP)											
+  keyring.go:30		0x495e6a		48c744240801000000	MOVQ $0x1, 0x8(SP)										
+  keyring.go:30		0x495e73		48c744241001000000	MOVQ $0x1, 0x10(SP)										
+  keyring.go:30		0x495e7c		e8efcdffff		CALL log.Fatal(SB)										
+  keyring.go:30		0x495e81		e912feffff		JMP 0x495c98											
+  keyring.go:30		0x495e86		488b6c2470		MOVQ 0x70(SP), BP										
+  keyring.go:30		0x495e8b		4883c478		ADDQ $0x78, SP											
+  keyring.go:30		0x495e8f		c3			RET												
+  keyring.go:9		0x495e90		e8db9efbff		CALL runtime.morestack_noctxt(SB)								
+  keyring.go:9		0x495e95		e9d6fdffff		JMP main.main(SB)										
+
+TEXT main.init(SB) <autogenerated>
+  <autogenerated>:1	0x495ea0		64488b0c25f8ffffff	MOVQ FS:0xfffffff8, CX				
+  <autogenerated>:1	0x495ea9		483b6110		CMPQ 0x10(CX), SP				
+  <autogenerated>:1	0x495ead		764b			JBE 0x495efa					
+  <autogenerated>:1	0x495eaf		4883ec08		SUBQ $0x8, SP					
+  <autogenerated>:1	0x495eb3		48892c24		MOVQ BP, 0(SP)					
+  <autogenerated>:1	0x495eb7		488d2c24		LEAQ 0(SP), BP					
+  <autogenerated>:1	0x495ebb		0fb60588830f00		MOVZX main.initdone.(SB), AX			
+  <autogenerated>:1	0x495ec2		80f801			CMPL $0x1, AL					
+  <autogenerated>:1	0x495ec5		7609			JBE 0x495ed0					
+  <autogenerated>:1	0x495ec7		488b2c24		MOVQ 0(SP), BP					
+  <autogenerated>:1	0x495ecb		4883c408		ADDQ $0x8, SP					
+  <autogenerated>:1	0x495ecf		c3			RET						
+  <autogenerated>:1	0x495ed0		7507			JNE 0x495ed9					
+  <autogenerated>:1	0x495ed2		e81917f9ff		CALL runtime.throwinit(SB)			
+  <autogenerated>:1	0x495ed7		0f0b			UD2						
+  <autogenerated>:1	0x495ed9		c6056a830f0001		MOVB $0x1, main.initdone.(SB)			
+  <autogenerated>:1	0x495ee0		e89bceffff		CALL log.init(SB)				
+  <autogenerated>:1	0x495ee5		e8c6f8ffff		CALL github.com/jsipprell/keyctl.init(SB)	
+  <autogenerated>:1	0x495eea		c60559830f0002		MOVB $0x2, main.initdone.(SB)			
+  <autogenerated>:1	0x495ef1		488b2c24		MOVQ 0(SP), BP					
+  <autogenerated>:1	0x495ef5		4883c408		ADDQ $0x8, SP					
+  <autogenerated>:1	0x495ef9		c3			RET						
+  <autogenerated>:1	0x495efa		e8719efbff		CALL runtime.morestack_noctxt(SB)		
+  <autogenerated>:1	0x495eff		eb9f			JMP main.init(SB)				
