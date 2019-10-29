@@ -1,11 +1,10 @@
 # gosystract
 gosystract returns the names and IDs of all system calls being called inside a go application.
 
-[![codecov](https://codecov.io/gh/pjbgf/gosystract/branch/master/graph/badge.svg?token=v9BeEO6F0S)](https://codecov.io/gh/pjbgf/gosystract)
+[![codecov](https://codecov.io/gh/pjbgf/gosystract/branch/master/graph/badge.svg?token=hPDXVgD96x)](https://codecov.io/gh/pjbgf/gosystract)
 [![Dependabot Status](https://api.dependabot.com/badges/status?host=github&repo=pjbgf/gosystract)](https://dependabot.com)
 [![GoReport](https://goreportcard.com/badge/github.com/pjbgf/gosystract)](https://goreportcard.com/badge/github.com/pjbgf/gosystract)
 [![GoDoc](https://godoc.org/github.com/pjbgf/gosystract?status.svg)](https://godoc.org/github.com/pjbgf/gosystract)
-[![Docker Pulls](https://img.shields.io/docker/pulls/paulinhu/gosystract.svg)](https://hub.docker.com/r/paulinhu/gosystract/tags)
 ![build](https://github.com/pjbgf/gosystract/workflows/go/badge.svg)
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](http://choosealicense.com/licenses/mit/)
 
