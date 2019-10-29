@@ -12,13 +12,32 @@ gosystract returns the names and IDs of all system calls being called inside a g
 
 ## Command-line Usage:
 
-```sh
-gosystrac goapp.dump
+Running the sample dump file:
+```console
+$ go run main.go test/keyring.dump
+
+16 syscalls found:
+read (0)
+sched_yield (24)
+futex (202)
+write (1)
+rt_sigprocmask (14)
+getpid (39)
+gettid (186)
+tgkill (234)
+rt_sigaction (13)
+exit_group (231)
+mmap (9)
+madvise (28)
+getpgrp (111)
+arch_prctl (158)
+add_key (248)
+keyctl (250)
 ```
 
 To generate a dump file from a go application use: 
-```sh
-go tool objdump goapp > goapp.dump
+```console
+$ go tool objdump goapp > goapp.dump
 ```
 
 ## Using it programatically
