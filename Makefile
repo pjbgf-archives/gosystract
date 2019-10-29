@@ -52,7 +52,7 @@ go-test-coverage:
 	@GOPATH=$(GOPATH) GOBIN=$(GOBIN) go test -coverprofile=coverage.txt -covermode=atomic ./... 
 
 
-verify: verify-gospec verify-version
+verify: verify-gospec
 
 verify-gospec:
 	@echo "  >  Downloading $(GOSECNAME)"
