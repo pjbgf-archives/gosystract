@@ -1,18 +1,169 @@
-package pkg
+package systrac
 
 import (
+	"bufio"
+	"os"
 	"regexp"
 	"strconv"
+	"sync"
 
 	"github.com/golang-collections/collections/stack"
 )
 
-const (
-	symbolDefinitionRegex   string = "TEXT.(\\b([a-zA-Z0-9_.\\/]|\\.|\\(\\*[a-zA-Z0-9_.\\/]+\\))+\\b)\\("
-	golangSyscallHexIDRegex string = "MOVQ.\\$0x([0-9a-fA-F]+)"
-	syscallHexIDRegex       string = "MOVL.\\$0x([0-9a-fA-F]+)"
-	callCaptureRegex        string = ".+CALL.(\\b([a-zA-Z0-9_.\\/]|\\.|\\(\\*[a-zA-Z0-9_.\\/]+\\))+\\b)+"
+var (
+	dumpFileName string
+
+	processedNames map[string]bool
+	namesMutex     sync.RWMutex
+	processedIDs   map[uint16]bool
+	idsMutex       sync.RWMutex
+
+	symbols map[string]symbolDefinition
 )
+
+type symbolDefinition struct {
+	syscallIDs []uint16
+	subCalls   []string
+}
+
+const (
+	symbolDefinitionRegex    string = "TEXT.(\\b([a-zA-Z0-9_.\\/]|\\.|\\(\\*[a-zA-Z0-9_.\\/]+\\))+\\b)\\("
+	golangSyscallHexIDRegex  string = "MOVQ.\\$0x([0-9a-fA-F]+)"
+	syscallHexIDRegex        string = "MOVL.\\$0x([0-9a-fA-F]+)"
+	callCaptureRegex         string = ".+CALL.(\\b([a-zA-Z0-9_.\\/]|\\.|\\(\\*[a-zA-Z0-9_.\\/]+\\))+\\b)+"
+	callsFromEntryPointRegex string = "main.go" + callCaptureRegex
+)
+
+func init() {
+	processedNames, processedIDs = make(map[string]bool), make(map[uint16]bool)
+	symbols = make(map[string]symbolDefinition)
+}
+
+type SystemCall struct {
+	ID   uint16
+	Name string
+}
+
+func Extract(dumpFileName string) []SystemCall {
+	syscalls := make([]SystemCall, 0)
+	consume := func(id uint16) {
+		syscalls = append(syscalls, SystemCall{
+			ID:   id,
+			Name: SystemCalls[id],
+		})
+	}
+
+	parseFile()
+
+	symbolCalls := []string{"main.init.0", "main.init.1", "main.main"}
+	for _, symbol := range symbolCalls {
+		processPerStage(symbol, consume)
+	}
+
+	return syscalls
+}
+
+func parseFile() {
+
+	dumpFileName = "keyring" //os.Args[1]
+	file, err := os.Open(dumpFileName)
+	if err != nil {
+		panic(file)
+	}
+	defer file.Close()
+	scanner := bufio.NewScanner(file)
+
+	for scanner.Scan() {
+		line := scanner.Text()
+
+		symbolName, found := GetSymbolName(line)
+		stack := stack.New()
+		symbol := symbolDefinition{
+			subCalls:   make([]string, 0),
+			syscallIDs: make([]uint16, 0),
+		}
+
+		for found {
+			if scanner.Scan() {
+				line = scanner.Text()
+
+				if IsEndOfSymbol(line) {
+					break
+				}
+
+				if id, found := TryGetSyscallID(line, stack); found {
+					symbol.syscallIDs = append(symbol.syscallIDs, id)
+					continue
+				}
+
+				if subcall, found := GetCallTarget(line); found {
+					symbol.subCalls = append(symbol.subCalls, subcall)
+					continue
+				}
+
+				StackSyscallIDIfNecessary(line, stack)
+			} else {
+				break
+			}
+		}
+
+		if len(symbol.subCalls) > 0 || len(symbol.syscallIDs) > 0 {
+			symbols[symbolName] = symbol
+		}
+	}
+}
+
+func processPerStage(symbolName string, consume func(uint16)) {
+	var (
+		sysCallIDs = make(chan uint16)
+		done       = make(chan struct{})
+	)
+	go func() {
+		defer close(sysCallIDs)
+
+		namesMutex.RLock()
+		_, exists := processedNames[symbolName]
+		namesMutex.RUnlock()
+
+		if !exists {
+			namesMutex.Lock()
+			processedNames[symbolName] = true
+			namesMutex.Unlock()
+
+			if s, found := symbols[symbolName]; found {
+
+				for _, id := range s.syscallIDs {
+					idsMutex.RLock()
+					_, exists := processedIDs[id]
+					idsMutex.RUnlock()
+
+					if !exists {
+						idsMutex.Lock()
+						processedIDs[id] = true
+						idsMutex.Unlock()
+
+						sysCallIDs <- id
+					}
+				}
+
+				for _, name := range s.subCalls {
+
+					processPerStage(name, consume)
+				}
+			}
+		}
+	}()
+
+	go func() {
+		for i := range sysCallIDs {
+			consume(i)
+		}
+
+		close(done)
+	}()
+
+	<-done
+}
 
 func StackSyscallIDIfNecessary(assemblyLine string, s *stack.Stack) {
 	if id, ok := GetSyscallID(assemblyLine); ok {
