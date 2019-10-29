@@ -31,7 +31,7 @@ func main() {
 	if len(syscalls) == 0 {
 		fmt.Printf("no syscalls found in %s\n", fileName)
 	} else {
-		fmt.Printf("%d syscalls found:\n", len(syscalls))
+		fmt.Printf("%d syscalls found:\n\n", len(syscalls))
 		for _, syscall := range syscalls {
 			fmt.Printf("%s (%d)\n", syscall.Name, syscall.ID)
 		}

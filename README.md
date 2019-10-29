@@ -16,6 +16,7 @@ Running the sample dump file:
 $ go run main.go test/keyring.dump
 
 16 syscalls found:
+
 read (0)
 sched_yield (24)
 futex (202)
