@@ -8,7 +8,7 @@ import (
 )
 
 func TestGetSyscallID(t *testing.T) {
-	assertThat := func(assumption, assemblyLine string, expectedId uint8, expectedMatch bool) {
+	assertThat := func(assumption, assemblyLine string, expectedId uint16, expectedMatch bool) {
 		assert := assert.New(t)
 
 		id, ok := GetSyscallID(assemblyLine)
@@ -88,6 +88,8 @@ func TestContainsSyscall(t *testing.T) {
 		assert.Equal(expected, containsSyscall)
 	}
 
+	assertThat("should return true for syscall.Syscall instruction", "zsyscall_linux_amd64.go:310	0x47d56b		e8a0070000		CALL syscall.Syscall(SB)", true)
+	assertThat("should return true for syscall.Syscall6 instruction", "sys_linux.go:149	0x4950b7		e8d48cfeff		CALL syscall.Syscall6(SB)		", true)
 	assertThat("should return true for SYSCALL instruction", "sys_linux_amd64.s:535	0x4534f1		0f05			SYSCALL", true)
 	assertThat("should return true for golang.org/x/sys/unix.Syscall instruction", "zsyscall_linux_amd64.go:442	0x48bd9a		e881030000		CALL golang.org/x/sys/unix.Syscall(SB)", true)
 	assertThat("should return false for instructions containing syscall on their name", "proc.go:2853		0x430ab3		eb8b			JMP runtime.entersyscall_sysmon(SB)", false)
@@ -95,7 +97,7 @@ func TestContainsSyscall(t *testing.T) {
 
 func TestTryGetSyscallID(t *testing.T) {
 
-	assertThat := func(assumption, assemblyLine string, expectedID uint8, s *stack.Stack, expectedMatch bool) {
+	assertThat := func(assumption, assemblyLine string, expectedID uint16, s *stack.Stack, expectedMatch bool) {
 		assert := assert.New(t)
 		actual, ok := TryGetSyscallID(assemblyLine, s)
 
@@ -109,7 +111,7 @@ func TestTryGetSyscallID(t *testing.T) {
 	StackSyscallIDIfNecessary("zsyscall_linux_amd64.go:442	0x48bd82		4889442408		MOVQ AX, 0x8(SP)					", stack)
 	StackSyscallIDIfNecessary("zsyscall_linux_amd64.go:442	0x48bd91		48c744241800000000	MOVQ $0x0, 0x18(SP)				", stack)
 
-	assertThat("should match main.main symbol", "zsyscall_linux_amd64.go:442	0x48bd9a		e881030000		CALL golang.org/x/sys/unix.Syscall(SB)", uint8(125), stack, true)
+	assertThat("should match main.main symbol", "zsyscall_linux_amd64.go:442	0x48bd9a		e881030000		CALL golang.org/x/sys/unix.Syscall(SB)", uint16(125), stack, true)
 }
 
 func TestStackSyscallIDIfNecessary(t *testing.T) {
@@ -117,7 +119,12 @@ func TestStackSyscallIDIfNecessary(t *testing.T) {
 	assert := assert.New(t)
 	stack := stack.New()
 	StackSyscallIDIfNecessary("zsyscall_linux_amd64.go:442	0x48bd75		48c704247d000000	MOVQ $0x7d, 0(SP)", stack)
+	StackSyscallIDIfNecessary("sys_linux.go:230	0x49554e		48c70424fa000000		MOVQ $0xfa, 0(SP)", stack)
+	StackSyscallIDIfNecessary("sys_linux_amd64.s:616	0x453aa5		48c7c702100000		MOVQ $0x1002, DI", stack)
+	StackSyscallIDIfNecessary("sys_linux_amd64.s:617	0x453aac		48c7c09e000000		MOVQ $0x9e, AX", stack)
 
-	assert.Equal(1, stack.Len())
-	assert.Equal(uint8(125), stack.Pop())
+	assert.Equal(3, stack.Len())
+	assert.Equal(uint16(158), stack.Pop())
+	assert.Equal(uint16(250), stack.Pop())
+	assert.Equal(uint16(125), stack.Pop())
 }
