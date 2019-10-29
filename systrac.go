@@ -13,7 +13,7 @@ import (
 )
 
 var (
-	executableSymbolCalls = []string{"main.init.0", "main.init.1", "main.main"}
+	executableSymbolCalls = []string{"main.main", "main.init.0", "main.init.1"}
 	processedNames        map[string]bool
 	namesMutex            sync.RWMutex
 	processedIDs          map[uint16]bool
@@ -63,18 +63,18 @@ func Extract(dumpFileName string) ([]SystemCall, error) {
 	if !isExecutable() {
 		return nil, errors.New("libraries are currently not supported")
 	}
-	processExecutable(consume, executableSymbolCalls)
+	processExecutable(consume)
 
 	return syscalls, nil
 }
 
 func isExecutable() bool {
-	_, ok := symbols["main.main"]
+	_, ok := symbols[executableSymbolCalls[0]]
 	return ok
 }
 
 // kick off process from executable key entry points.
-func processExecutable(consume func(id uint16), executableSymbolCalls []string) {
+func processExecutable(consume func(id uint16)) {
 	for _, symbol := range executableSymbolCalls {
 		processDump(symbol, consume)
 	}
