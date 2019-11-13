@@ -19,7 +19,7 @@ To generate a dump file from a go application use:
 )
 
 func main() {
-	if len(os.Args) != 2 {
+	if len(os.Args) < 2 || len(os.Args) > 3 {
 		fmt.Println(usageMessage)
 		os.Exit(1)
 	}
@@ -30,7 +30,14 @@ func main() {
 		panic(err)
 	}
 
-	t := template.Must(template.ParseFiles("result.tmpl"))
+	var t *template.Template
+
+	if len(os.Args) > 2 {
+		t = template.Must(template.New("result.tmpl").Parse(os.Args[2]))
+	} else {
+		t = template.Must(template.ParseFiles("result.tmpl"))
+	}
+
 	err = t.Execute(os.Stdout, syscalls)
 	if err != nil {
 		panic(err)
