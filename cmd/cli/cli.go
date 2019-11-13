@@ -68,7 +68,19 @@ func parseInputValues(args []string) (
 	return
 }
 
-// Run does basic handling of user input
+/*
+Run processes the source and writes the found syscalls into output.
+The parameter args contains the executable name, the optional flags followed by the filepath.
+
+Example:
+[]string{ "gosystract", "--dumpfile", "filename"}
+
+Flag options:
+
+--dumpfile, -d    Handles a dump file instead of go executable.
+
+--template        Defines a go template for the results.
+*/
 func Run(output io.Writer, args []string, extract func(source systract.SourceReader) ([]systract.SystemCall, error)) error {
 
 	inputIsDumpFile, customFormat, fileName, err := parseInputValues(args)
