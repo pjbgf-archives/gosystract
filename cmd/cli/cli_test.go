@@ -1,4 +1,4 @@
-package internal
+package cli
 
 import (
 	"bytes"
@@ -82,7 +82,7 @@ Flags:
 	})
 
 	t.Run("should support custom go template for results", func(t *testing.T) {
-		args := []string{"gosystract", "filename", "--template=\"{{- range . }}\"{{.Name}}\",{{- end}}\""}
+		args := []string{"gosystract", "--template=\"{{- range . }}\"{{.Name}}\",{{- end}}\"", "filename"}
 		var output bytes.Buffer
 
 		err := Run(&output, args, func(source systract.SourceReader) ([]systract.SystemCall, error) {

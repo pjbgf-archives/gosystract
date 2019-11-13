@@ -1,3 +1,4 @@
+// Package systract provides libraries to extract syscalls from go applications programmatically.
 package systract
 
 import (
@@ -43,6 +44,7 @@ func init() {
 	symbols = make(map[string]symbolDefinition)
 }
 
+// SourceReader defines the interface for source readers
 type SourceReader interface {
 	GetReader() (io.Reader, error)
 }
@@ -60,7 +62,7 @@ func Extract(source SourceReader) ([]SystemCall, error) {
 
 	reader, err := source.GetReader()
 	if err != nil {
-		return nil, errors.Wrap(err, "error loading file")
+		return nil, err
 	}
 
 	parseReader(reader)

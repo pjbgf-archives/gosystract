@@ -1,4 +1,5 @@
-package internal
+// Package cli provides a command-line interface for gosystract.
+package cli
 
 import (
 	"errors"
