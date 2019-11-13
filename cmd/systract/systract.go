@@ -1,3 +1,4 @@
+// Package systract provides libraries to extract syscalls from go applications programmatically.
 package systract
 
 import (
