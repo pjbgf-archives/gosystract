@@ -1,10 +1,10 @@
 package main
 
 import (
-	"fmt"
 	"html/template"
 	"os"
 
+	cli "github.com/pjbgf/gosystract/cmd/cli"
 	"github.com/pjbgf/gosystract/cmd/systract"
 )
 
@@ -19,9 +19,9 @@ To generate a dump file from a go application use:
 )
 
 func main() {
-	if len(os.Args) < 2 || len(os.Args) > 3 {
-		fmt.Println(usageMessage)
-		os.Exit(1)
+	err := cli.Run(os.Stdout, os.Args, systract.Extract)
+	if err != nil {
+		panic(err)
 	}
 
 	fileName := os.Args[1]
