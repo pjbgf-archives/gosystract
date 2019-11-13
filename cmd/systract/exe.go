@@ -30,12 +30,15 @@ func (e *ExeReader) GetReader() (io.Reader, error) {
 		return nil, errors.New("file does not exist or permission denied")
 	}
 
-	return getFileDump(filePath)
+	objDumpFilePath := getObjDumpFilePath()
+	return getFileDumpReader(objDumpFilePath, filePath)
 }
 
-func getFileDump(filePath string) (io.Reader, error) {
-	objDumpFilePath := fmt.Sprintf("/usr/local/go/pkg/tool/%s_%s/objdump", runtime.GOOS, runtime.GOARCH)
+func getObjDumpFilePath() string {
+	return fmt.Sprintf("/usr/local/go/pkg/tool/%s_%s/objdump", runtime.GOOS, runtime.GOARCH)
+}
 
+func getFileDumpReader(objDumpFilePath, filePath string) (io.Reader, error) {
 	/* #nosec filePath is pre-processed by sanitiseFileName */
 	cmd := exec.Command(objDumpFilePath, filePath)
 	output, err := cmd.StdoutPipe()

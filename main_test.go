@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestMain_E2E(t *testing.T) {
+func TestMain_Integration(t *testing.T) {
 	assert := assert.New(t)
 
 	var output bytes.Buffer
