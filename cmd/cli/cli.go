@@ -32,7 +32,7 @@ To generate a dump file from a go application use:
 func Run(output io.Writer, args []string, extract func(dumpFileName string) ([]systract.SystemCall, error)) error {
 
 	if len(args) < 2 || len(args) > 3 {
-		output.Write([]byte(usageMessage))
+		_, _ = output.Write([]byte(usageMessage))
 		return errors.New(invalidSyntaxMessage)
 	}
 
@@ -47,9 +47,7 @@ func Run(output io.Writer, args []string, extract func(dumpFileName string) ([]s
 		return err
 	}
 
-	writeResults(output, syscalls, customFormat)
-
-	return nil
+	return writeResults(output, syscalls, customFormat)
 }
 
 func writeResults(output io.Writer, syscalls []systract.SystemCall, customFormat string) error {
