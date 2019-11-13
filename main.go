@@ -9,7 +9,7 @@ import (
 )
 
 var (
-	noSyscallsFoundMessage string = "no syscalls found in %s\n"
+	noSyscallsFoundMessage string = "no systems calls were found"
 	usageMessage           string = `gosystract returns the names and IDs of all system calls being called inside a go application.
 Usage: 
 	gosystrac goapp.dump

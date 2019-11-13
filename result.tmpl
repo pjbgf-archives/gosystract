@@ -1,8 +1,8 @@
 {{if . -}}
-{{- len . }} systems calls found:
+{{- len . }} system calls found:
 {{- range . }}
     {{ .Name }} ({{.ID}})
 {{- end}}
 {{- else}}
-No systems calls were found
+no systems calls were found
 {{- end}}

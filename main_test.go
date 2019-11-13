@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"os/exec"
 	"testing"
 
@@ -38,7 +37,7 @@ func TestMain_NoSyscalls(t *testing.T) {
 	output, err := cmd.Output()
 
 	actual := string(output)
-	expected := fmt.Sprintf(noSyscallsFoundMessage, fileName)
+	expected := noSyscallsFoundMessage
 
 	assert.Nil(err)
 	assert.Contains(actual, expected)
@@ -56,7 +55,7 @@ func TestMain(t *testing.T) {
 	output, err := cmd.Output()
 
 	actual := string(output)
-	expected := "1 syscalls found:\n\nexit_group (231)"
+	expected := "1 system calls found:\n    exit_group (231)"
 
 	assert.Nil(err)
 	assert.Contains(actual, expected)
