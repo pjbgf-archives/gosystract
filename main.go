@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"io"
 	"os"
 
@@ -15,6 +16,7 @@ func main() {
 func run(output io.Writer, args []string) {
 	err := cli.Run(output, args, systract.Extract)
 	if err != nil {
-		panic(err)
+		fmt.Printf("\nerror: %s\n", err)
+		os.Exit(1)
 	}
 }
