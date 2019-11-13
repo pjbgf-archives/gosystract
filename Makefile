@@ -1,4 +1,5 @@
 BINARY_NAME := $(shell basename "$(PWD)")
+VERSION := $(shell git describe --tags --always)
 
 GOBASE := $(shell pwd)
 GOPATH := $(GOBASE)/vendor:$(GOBASE)
@@ -22,6 +23,19 @@ clean:
 	@-rm $(GOBIN)/$(BINARY_NAME) 2> /dev/null
 	@-$(MAKE) go-clean
 
+image: 
+	@-$(MAKE) docker-build
+
+push: 
+	@-$(MAKE) docker-push
+
+docker-build: 
+	@echo "  >  Building image $(REGISTRY)/$(BINARY_NAME):$(VERSION)"
+	@docker build -t $(REGISTRY)/$(BINARY_NAME):$(VERSION) .
+
+docker-push: 
+	@echo "  >  Building image $(REGISTRY)/$(BINARY_NAME):$(VERSION)"
+	@docker build -t $(REGISTRY)/$(BINARY_NAME):$(VERSION) .
 
 test: go-test
 
