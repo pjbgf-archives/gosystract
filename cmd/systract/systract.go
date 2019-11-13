@@ -61,7 +61,7 @@ func Extract(source SourceReader) ([]SystemCall, error) {
 
 	reader, err := source.GetReader()
 	if err != nil {
-		return nil, errors.Wrap(err, "error loading file")
+		return nil, err
 	}
 
 	parseReader(reader)
