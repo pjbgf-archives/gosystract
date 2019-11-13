@@ -23,6 +23,7 @@ func TestRun(t *testing.T) {
 		want := `gosystract returns the names and IDs of all system calls being called inside a go application.
 Usage: 
 	gosystrac goapp.dump
+	gosystrac goapp.dump "{{- range . }}{{printf "%d - %s\n" .ID .Name}}{{- end}}"
 
 To generate a dump file from a go application use: 
 	go tool objdump goapp > goapp.dump`
@@ -66,6 +67,26 @@ To generate a dump file from a go application use:
 
 		got := output.String()
 		want := "\"abc\",\"def\","
+
+		if got != want {
+			t.Errorf("got %q, want %q", got, want)
+		}
+
+		if err != nil {
+			t.Error(err)
+		}
+	})
+
+	t.Run("should show message when no syscalls are found", func(t *testing.T) {
+		args := []string{"gosystract", "filename"}
+		var output bytes.Buffer
+
+		err := Run(&output, args, func(dumpFileName string) ([]systract.SystemCall, error) {
+			return []systract.SystemCall{}, nil
+		})
+
+		got := output.String()
+		want := "no systems calls were found\n"
 
 		if got != want {
 			t.Errorf("got %q, want %q", got, want)

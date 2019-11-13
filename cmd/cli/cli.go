@@ -10,13 +10,22 @@ import (
 
 var (
 	invalidSyntaxMessage string = "invalid systax"
-	usageMessage         string = `gosystract returns the names and IDs of all system calls being called inside a go application.
+
+	usageMessage string = `gosystract returns the names and IDs of all system calls being called inside a go application.
 Usage: 
 	gosystrac goapp.dump
 	gosystrac goapp.dump "{{- range . }}{{printf "%d - %s\n" .ID .Name}}{{- end}}"
 
 To generate a dump file from a go application use: 
 	go tool objdump goapp > goapp.dump`
+
+	resultGoTemplate string = `{{if . -}}
+{{- len . }} system calls found:
+{{- range . }}
+    {{ .Name }} ({{.ID}})
+{{- end}}
+{{- else}}no systems calls were found{{- end}}
+`
 )
 
 // Run does basic handling of user input
@@ -46,9 +55,9 @@ func Run(output io.Writer, args []string, extract func(dumpFileName string) ([]s
 func writeResults(output io.Writer, syscalls []systract.SystemCall, customFormat string) error {
 	var t *template.Template
 	if customFormat != "" {
-		t = template.Must(template.New("result.tmpl").Parse(customFormat))
+		t = template.Must(template.New("result").Parse(customFormat))
 	} else {
-		t = template.Must(template.ParseFiles("result.tmpl"))
+		t = template.Must(template.New("result").Parse(resultGoTemplate))
 	}
 
 	return t.Execute(output, syscalls)
