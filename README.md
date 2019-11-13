@@ -3,7 +3,7 @@ gosystract extracts all system calls that may be called within the execution pat
 
 [![codecov](https://codecov.io/gh/pjbgf/gosystract/branch/master/graph/badge.svg?token=hPDXVgD96x)](https://codecov.io/gh/pjbgf/gosystract)
 [![Dependabot Status](https://api.dependabot.com/badges/status?host=github&repo=pjbgf/gosystract)](https://dependabot.com)
-[![GoReport](https://goreportcard.com/badge/github.com/pjbgf/gosystract)](https://goreportcard.com/badge/github.com/pjbgf/gosystract)
+[![GoReport](https://goreportcard.com/badge/github.com/pjbgf/gosystract)](https://goreportcard.com/report/github.com/pjbgf/gosystract)
 [![GoDoc](https://godoc.org/github.com/pjbgf/gosystract?status.svg)](https://godoc.org/github.com/pjbgf/gosystract)
 ![build](https://github.com/pjbgf/gosystract/workflows/go/badge.svg)
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](http://choosealicense.com/licenses/mit/)
