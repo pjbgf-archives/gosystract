@@ -3,7 +3,6 @@ package systract
 import (
 	"bufio"
 	"os"
-	"path/filepath"
 	"testing"
 )
 
