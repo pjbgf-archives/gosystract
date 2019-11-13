@@ -30,8 +30,9 @@ func (e *ExeReader) GetReader() (io.Reader, error) {
 }
 
 func getFileDump(filePath string) (io.Reader, error) {
-	/* #nosec filePath is pre-processed by sanitiseFileName */
 	objDumpFilePath := fmt.Sprintf("/usr/local/go/pkg/tool/%s_%s/objdump", runtime.GOOS, runtime.GOARCH)
+
+	/* #nosec filePath is pre-processed by sanitiseFileName */
 	cmd := exec.Command(objDumpFilePath, filePath)
 	output, err := cmd.StdoutPipe()
 
