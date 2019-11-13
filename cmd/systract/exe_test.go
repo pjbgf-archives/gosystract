@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func TestGetReader_Integration(t *testing.T) {
+func TestExeReader_GetReader_Integration(t *testing.T) {
 
 	t.Run("should error when file not found", func(t *testing.T) {
 
