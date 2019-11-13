@@ -15,7 +15,7 @@ func TestRun(t *testing.T) {
 		args := []string{}
 		var output bytes.Buffer
 
-		err := Run(&output, args, func(dumpFileName string) ([]systract.SystemCall, error) {
+		err := Run(&output, args, func(source systract.SourceReader) ([]systract.SystemCall, error) {
 			return nil, errors.New("invalid systax")
 		})
 
@@ -41,7 +41,7 @@ To generate a dump file from a go application use:
 		args := []string{"gosystract", "filename"}
 		var output bytes.Buffer
 
-		err := Run(&output, args, func(dumpFileName string) ([]systract.SystemCall, error) {
+		err := Run(&output, args, func(source systract.SourceReader) ([]systract.SystemCall, error) {
 			return []systract.SystemCall{{ID: 1, Name: "abc"}, {ID: 2, Name: "def"}}, nil
 		})
 
@@ -61,7 +61,7 @@ To generate a dump file from a go application use:
 		args := []string{"gosystract", "filename", "{{- range . }}\"{{.Name}}\",{{- end}}"}
 		var output bytes.Buffer
 
-		err := Run(&output, args, func(dumpFileName string) ([]systract.SystemCall, error) {
+		err := Run(&output, args, func(source systract.SourceReader) ([]systract.SystemCall, error) {
 			return []systract.SystemCall{{ID: 1, Name: "abc"}, {ID: 2, Name: "def"}}, nil
 		})
 
@@ -81,7 +81,7 @@ To generate a dump file from a go application use:
 		args := []string{"gosystract", "filename"}
 		var output bytes.Buffer
 
-		err := Run(&output, args, func(dumpFileName string) ([]systract.SystemCall, error) {
+		err := Run(&output, args, func(source systract.SourceReader) ([]systract.SystemCall, error) {
 			return []systract.SystemCall{}, nil
 		})
 

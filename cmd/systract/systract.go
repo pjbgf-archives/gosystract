@@ -2,9 +2,7 @@ package systract
 
 import (
 	"bufio"
-	"os"
-	"path"
-	"path/filepath"
+	"io"
 	"regexp"
 	"strconv"
 	"sync"
@@ -45,16 +43,12 @@ func init() {
 	symbols = make(map[string]symbolDefinition)
 }
 
-// Extract returns all system calls made in the execution path of the dumpFile provided.
-func Extract(dumpFileName string) ([]SystemCall, error) {
+type SourceReader interface {
+	GetReader() (io.Reader, error)
+}
 
-	filePath, err := sanitiseFileName(dumpFileName)
-	if err != nil {
-		return nil, err
-	}
-	if !fileExists(filePath) {
-		return nil, errors.New("file does not exist or permission denied")
-	}
+// Extract returns all system calls made in the execution path of the dumpFile provided.
+func Extract(source SourceReader) ([]SystemCall, error) {
 
 	syscalls := make([]SystemCall, 0)
 	consume := func(id uint16) {
@@ -64,7 +58,12 @@ func Extract(dumpFileName string) ([]SystemCall, error) {
 		})
 	}
 
-	parseFile(filePath)
+	reader, err := source.GetReader()
+	if err != nil {
+		return nil, errors.Wrap(err, "error loading file")
+	}
+
+	parseReader(reader)
 	if !isExecutable() {
 		return nil, errors.New("libraries are currently not supported")
 	}
@@ -85,34 +84,8 @@ func processExecutable(consume func(id uint16)) {
 	}
 }
 
-func fileExists(fileName string) bool {
-	if _, err := os.Stat(fileName); err == nil {
-		return true
-	}
-
-	return false
-}
-
-func sanitiseFileName(input string) (string, error) {
-	if !path.IsAbs(input) {
-		base, err := os.Getwd()
-		if err != nil {
-			return "", errors.Wrap(err, "error getting current folder")
-		}
-
-		return filepath.Join(base, filepath.Clean(input)), nil
-	}
-	return input, nil
-}
-
-func parseFile(filePath string) {
-	/* #nosec filePath is pre-processed by sanitiseFileName */
-	file, err := os.Open(filePath)
-	if err != nil {
-		panic(file)
-	}
-	defer file.Close()
-	scanner := bufio.NewScanner(file)
+func parseReader(reader io.Reader) {
+	scanner := bufio.NewScanner(reader)
 
 	for scanner.Scan() {
 		line := scanner.Text()

@@ -29,7 +29,7 @@ To generate a dump file from a go application use:
 )
 
 // Run does basic handling of user input
-func Run(output io.Writer, args []string, extract func(dumpFileName string) ([]systract.SystemCall, error)) error {
+func Run(output io.Writer, args []string, extract func(source systract.SourceReader) ([]systract.SystemCall, error)) error {
 
 	if len(args) < 2 || len(args) > 3 {
 		_, _ = output.Write([]byte(usageMessage))
@@ -42,7 +42,7 @@ func Run(output io.Writer, args []string, extract func(dumpFileName string) ([]s
 		customFormat = args[2]
 	}
 
-	syscalls, err := extract(fileName)
+	syscalls, err := extract(systract.NewDumpReader(fileName))
 	if err != nil {
 		return err
 	}
