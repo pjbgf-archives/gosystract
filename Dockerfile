@@ -17,6 +17,5 @@ RUN go build -ldflags "-w -X=github.com/pjbgf/gosystract/cmd/cli.gitcommit=$(git
 
 FROM alpine:latest
 COPY --from=build /go/bin/gosystract /usr/bin
-COPY --from=build /usr/local/go/bin/go /usr/bin
 COPY --from=build /usr/local/go/pkg/tool/linux_amd64/objdump /usr/local/go/pkg/tool/linux_amd64/
 CMD ["/gosystract"]

@@ -1,8 +1,10 @@
 package systract
 
 import (
+	"fmt"
 	"io"
 	"os/exec"
+	"runtime"
 
 	"github.com/pkg/errors"
 )
@@ -29,7 +31,8 @@ func (e *ExeReader) GetReader() (io.Reader, error) {
 
 func getFileDump(filePath string) (io.Reader, error) {
 	/* #nosec filePath is pre-processed by sanitiseFileName */
-	cmd := exec.Command("go", "tool", "objdump", filePath)
+	objDumpFilePath := fmt.Sprintf("/usr/local/go/pkg/tool/%s_%s/objdump", runtime.GOOS, runtime.GOARCH)
+	cmd := exec.Command(objDumpFilePath, filePath)
 	output, err := cmd.StdoutPipe()
 
 	if err := cmd.Start(); err != nil {
