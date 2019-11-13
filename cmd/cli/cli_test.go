@@ -15,7 +15,7 @@ func TestRun(t *testing.T) {
 		args := []string{}
 		var output bytes.Buffer
 
-		Run(&output, args, func(dumpFileName string) ([]systract.SystemCall, error) {
+		err := Run(&output, args, func(dumpFileName string) ([]systract.SystemCall, error) {
 			return nil, errors.New("invalid systax")
 		})
 
@@ -30,6 +30,49 @@ To generate a dump file from a go application use:
 		if got != want {
 			t.Errorf("got %q, want %q", got, want)
 		}
+
+		if err == nil {
+			t.Error("should have returned error")
+		}
 	})
 
+	t.Run("should show syscalls found", func(t *testing.T) {
+		args := []string{"gosystract", "filename"}
+		var output bytes.Buffer
+
+		err := Run(&output, args, func(dumpFileName string) ([]systract.SystemCall, error) {
+			return []systract.SystemCall{{ID: 1, Name: "abc"}, {ID: 2, Name: "def"}}, nil
+		})
+
+		got := output.String()
+		want := "2 system calls found:\n    abc (1)\n    def (2)\n"
+
+		if got != want {
+			t.Errorf("got %q, want %q", got, want)
+		}
+
+		if err != nil {
+			t.Error(err)
+		}
+	})
+
+	t.Run("should support custom go template for results", func(t *testing.T) {
+		args := []string{"gosystract", "filename", "{{- range . }}\"{{.Name}}\",{{- end}}"}
+		var output bytes.Buffer
+
+		err := Run(&output, args, func(dumpFileName string) ([]systract.SystemCall, error) {
+			return []systract.SystemCall{{ID: 1, Name: "abc"}, {ID: 2, Name: "def"}}, nil
+		})
+
+		got := output.String()
+		want := "\"abc\",\"def\","
+
+		if got != want {
+			t.Errorf("got %q, want %q", got, want)
+		}
+
+		if err != nil {
+			t.Error(err)
+		}
+	})
 }
