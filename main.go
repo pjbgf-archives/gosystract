@@ -30,18 +30,9 @@ func main() {
 		panic(err)
 	}
 
-	t := template.Must(template.New("result.tmpl").ParseFiles("result.tmpl"))
+	t := template.Must(template.ParseFiles("result.tmpl"))
 	err = t.Execute(os.Stdout, syscalls)
 	if err != nil {
 		panic(err)
 	}
-
-	// if len(syscalls) == 0 {
-	// 	fmt.Printf(noSyscallsFoundMessage, fileName)
-	// } else {
-	// 	fmt.Printf("%d syscalls found:\n\n", len(syscalls))
-	// 	for _, syscall := range syscalls {
-	// 		fmt.Printf("%s (%d)\n", syscall.Name, syscall.ID)
-	// 	}
-	// }
 }
