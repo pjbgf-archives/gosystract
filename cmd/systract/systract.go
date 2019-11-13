@@ -43,6 +43,7 @@ func init() {
 	symbols = make(map[string]symbolDefinition)
 }
 
+// SourceReader defines the interface for source readers
 type SourceReader interface {
 	GetReader() (io.Reader, error)
 }
