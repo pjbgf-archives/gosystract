@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+	"io"
 	"os"
 
 	cli "github.com/pjbgf/gosystract/cmd/cli"
@@ -8,8 +10,13 @@ import (
 )
 
 func main() {
-	err := cli.Run(os.Stdout, os.Args, systract.Extract)
+	run(os.Stdout, os.Args)
+}
+
+func run(output io.Writer, args []string) {
+	err := cli.Run(output, args, systract.Extract)
 	if err != nil {
-		panic(err)
+		fmt.Printf("\nerror: %s\n", err)
+		os.Exit(1)
 	}
 }

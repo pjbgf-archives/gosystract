@@ -17,7 +17,7 @@ func TestExtract_FileDoesNotExist(t *testing.T) {
 		assert.Fail("test cannot run because file should not exist")
 	}
 
-	syscalls, err := Extract(fileName)
+	syscalls, err := Extract(NewDumpReader(fileName))
 
 	assert.Error(err)
 	assert.Len(syscalls, 0)
@@ -31,7 +31,7 @@ func TestExtract_E2E_LibrariesNotSupported(t *testing.T) {
 		assert.Fail("test cannot run because systrac sample file does not exist")
 	}
 
-	syscalls, err := Extract(fileName)
+	syscalls, err := Extract(NewDumpReader(fileName))
 
 	assert.Error(err)
 	assert.Len(syscalls, 0)
@@ -56,7 +56,7 @@ func TestExtract_E2E_Executable(t *testing.T) {
 		SystemCall{ID: 0xf8, Name: "add_key"}, SystemCall{ID: 0xfa, Name: "keyctl"},
 	}
 
-	actual, err := Extract(fileName)
+	actual, err := Extract(NewDumpReader(fileName))
 
 	assert.Nil(err)
 	assert.Equal(expected, actual)
