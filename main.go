@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"html/template"
 	"os"
 
 	"github.com/pjbgf/gosystract/cmd/systract"
@@ -29,12 +30,18 @@ func main() {
 		panic(err)
 	}
 
-	if len(syscalls) == 0 {
-		fmt.Printf(noSyscallsFoundMessage, fileName)
-	} else {
-		fmt.Printf("%d syscalls found:\n\n", len(syscalls))
-		for _, syscall := range syscalls {
-			fmt.Printf("%s (%d)\n", syscall.Name, syscall.ID)
-		}
+	t := template.Must(template.New("result.tmpl").ParseFiles("result.tmpl"))
+	err = t.Execute(os.Stdout, syscalls)
+	if err != nil {
+		panic(err)
 	}
+
+	// if len(syscalls) == 0 {
+	// 	fmt.Printf(noSyscallsFoundMessage, fileName)
+	// } else {
+	// 	fmt.Printf("%d syscalls found:\n\n", len(syscalls))
+	// 	for _, syscall := range syscalls {
+	// 		fmt.Printf("%s (%d)\n", syscall.Name, syscall.ID)
+	// 	}
+	// }
 }
