@@ -46,14 +46,14 @@ func TestExtract_E2E_Executable(t *testing.T) {
 	}
 
 	expected := []SystemCall{
-		SystemCall{ID: 0x0, Name: "read"}, SystemCall{ID: 0x18, Name: "sched_yield"},
-		SystemCall{ID: 0xca, Name: "futex"}, SystemCall{ID: 0x1, Name: "write"},
-		SystemCall{ID: 0xe, Name: "rt_sigprocmask"}, SystemCall{ID: 0x27, Name: "getpid"},
-		SystemCall{ID: 0xba, Name: "gettid"}, SystemCall{ID: 0xea, Name: "tgkill"},
-		SystemCall{ID: 0xd, Name: "rt_sigaction"}, SystemCall{ID: 0xe7, Name: "exit_group"},
-		SystemCall{ID: 0x9, Name: "mmap"}, SystemCall{ID: 0x1c, Name: "madvise"},
-		SystemCall{ID: 0x6f, Name: "getpgrp"}, SystemCall{ID: 0x9e, Name: "arch_prctl"},
-		SystemCall{ID: 0xf8, Name: "add_key"}, SystemCall{ID: 0xfa, Name: "keyctl"},
+		{ID: 0x0, Name: "read"}, {ID: 0x18, Name: "sched_yield"},
+		{ID: 0xca, Name: "futex"}, {ID: 0x1, Name: "write"},
+		{ID: 0xe, Name: "rt_sigprocmask"}, {ID: 0x27, Name: "getpid"},
+		{ID: 0xba, Name: "gettid"}, {ID: 0xea, Name: "tgkill"},
+		{ID: 0xd, Name: "rt_sigaction"}, {ID: 0xe7, Name: "exit_group"},
+		{ID: 0x9, Name: "mmap"}, {ID: 0x1c, Name: "madvise"},
+		{ID: 0x6f, Name: "getpgrp"}, {ID: 0x9e, Name: "arch_prctl"},
+		{ID: 0xf8, Name: "add_key"}, {ID: 0xfa, Name: "keyctl"},
 	}
 
 	actual, err := Extract(NewDumpReader(fileName))
