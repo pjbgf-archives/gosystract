@@ -3,6 +3,7 @@ package systract
 import (
 	"bufio"
 	"os"
+	"path/filepath"
 	"testing"
 )
 
@@ -35,7 +36,7 @@ func TestExeReader_GetReader_Integration(t *testing.T) {
 }
 
 func TestGetFileDumpReader(t *testing.T) {
-	reader, err := getFileDumpReader("echo", "123456")
+	reader, err := getFileDumpReader("/bin/echo", "123456")
 
 	scanner := bufio.NewScanner(reader)
 	scanner.Scan()

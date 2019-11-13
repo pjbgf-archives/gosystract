@@ -41,6 +41,12 @@ func getObjDumpFilePath() string {
 func getFileDumpReader(objDumpFilePath, filePath string) (io.Reader, error) {
 	/* #nosec filePath is pre-processed by sanitiseFileName */
 	cmd := exec.Command(objDumpFilePath, filePath)
+
+	if !fileExists(objDumpFilePath) {
+		/* #nosec filePath is pre-processed by sanitiseFileName */
+		cmd = exec.Command("go", "tool", "objdump", filePath)
+	}
+
 	output, err := cmd.StdoutPipe()
 
 	if err := cmd.Start(); err != nil {
