@@ -3,21 +3,25 @@ package internal
 import (
 	"errors"
 	"io"
+	"strings"
 	"text/template"
 
 	"github.com/pjbgf/gosystract/cmd/systract"
 )
 
 var (
-	invalidSyntaxMessage string = "invalid systax"
+	invalidSyntaxMessage string = "syntax invalid"
 
-	usageMessage string = `gosystract returns the names and IDs of all system calls being called inside a go application.
-Usage: 
-	gosystrac goapp.dump
-	gosystrac goapp.dump "{{- range . }}{{printf "%d - %s\n" .ID .Name}}{{- end}}"
+	usageMessage string = `Usage:
+	gosystrac [flags] filePath
 
-To generate a dump file from a go application use: 
-	go tool objdump goapp > goapp.dump`
+Flags:
+	--dumpfile, -d  	Handles a dump file instead of go executables.
+						To generate a dump file use: go tool objdump exeFilePath > file.dump
+
+	--template			Define a go template for the results. 
+						Example: {{- range . }}{{printf "%d - %s\n" .ID .Name}}{{- end}}
+`
 
 	resultGoTemplate string = `{{if . -}}
 {{- len . }} system calls found:
@@ -28,21 +32,56 @@ To generate a dump file from a go application use:
 `
 )
 
+func parseInputValues(args []string) (
+	inputIsDumpFile bool, customFormat string, fileName string, err error) {
+
+	if len(args) < 2 {
+		err = errors.New(invalidSyntaxMessage)
+		return
+	}
+
+	fileName = args[len(args)-1]
+	for _, arg := range args[1:] {
+		if arg == "--dumpfile" || arg == "-d" {
+			inputIsDumpFile = true
+			continue
+		}
+
+		if strings.HasPrefix(arg, "--template=") {
+			customFormat = strings.TrimPrefix(arg, "--template=")
+
+			if strings.HasPrefix(customFormat, "\"") {
+				customFormat = strings.TrimPrefix(customFormat, "\"")
+			}
+
+			if strings.HasSuffix(customFormat, "\"") {
+				customFormat = strings.TrimSuffix(customFormat, "\"")
+			}
+
+			continue
+		}
+	}
+
+	return
+}
+
 // Run does basic handling of user input
 func Run(output io.Writer, args []string, extract func(source systract.SourceReader) ([]systract.SystemCall, error)) error {
 
-	if len(args) < 2 || len(args) > 3 {
+	inputIsDumpFile, customFormat, fileName, err := parseInputValues(args)
+	if err != nil {
 		_, _ = output.Write([]byte(usageMessage))
 		return errors.New(invalidSyntaxMessage)
 	}
 
-	fileName := args[1]
-	customFormat := ""
-	if len(args) == 3 {
-		customFormat = args[2]
+	var sourceReader systract.SourceReader
+	if inputIsDumpFile {
+		sourceReader = systract.NewDumpReader(fileName)
+	} else {
+		sourceReader = systract.NewExeReader(fileName)
 	}
 
-	syscalls, err := extract(systract.NewDumpReader(fileName))
+	syscalls, err := extract(sourceReader)
 	if err != nil {
 		return err
 	}
