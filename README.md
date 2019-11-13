@@ -11,31 +11,34 @@ gosystract extracts all system calls that may be called within the execution pat
 
 ## Installation:
 
+### using container image
+```console
+docker run --rm -it paulinhu/gosystract gosystract
+``` 
+
+### using go environment
 ```console
 go install github.com/pjbgf/gosystract
 ``` 
 
-If you don't have $GOPATH/bin in your $PATH, you should be able to execute with:
+If you don't have $GOPATH/bin in your $PATH, prefix the command with:
 
 `PATH=$PATH:$GOPATH/bin gosystract`
 
-> Note that gosystract has a dependency to go tools, so please make sure your go installation is set on your PATH.
+> Note that gosystract has a dependency to go tools when working against executable files. On those scenarios, ensure they are in your $PATH.
 
 ## Command-line Usage:
 
 Syntax
 ```console
 Usage:
-        gosystrac [flags] filePath
+
+	gosystrac [flags] filePath
 
 Flags:
-        --dumpfile, -d  	Handles a dump file instead of go executables.
-							To generate a dump file use: go tool objdump exeFilePath > file.dump
-
-        --template          Define a go template for the results. 
-                            Example:
-							
-							{{- range . }}{{printf "%d - %s\n" .ID .Name}}{{- end}}
+    --dumpfile, -d    Handles a dump file instead of go executable.
+    --template        Defines a go template for the results.
+                      Example: --template="{{- range . }}{{printf "%d - %s\n" .ID .Name}}{{- end}}"
 ```
 
 Running against gosystract itself:

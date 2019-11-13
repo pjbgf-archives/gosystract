@@ -21,7 +21,7 @@ var (
 
 Flags:
 	--dumpfile, -d    Handles a dump file instead of go executable.
-	--template	  Define a go template for the results.
+	--template	  Defines a go template for the results.
 			  Example: --template="{{- range . }}{{printf "%d - %s\n" .ID .Name}}{{- end}}"
 `
 
