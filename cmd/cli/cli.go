@@ -2,6 +2,7 @@ package internal
 
 import (
 	"errors"
+	"fmt"
 	"io"
 	"strings"
 	"text/template"
@@ -10,17 +11,18 @@ import (
 )
 
 var (
+	// gitcommit is set at compilation time through ldflags
+	gitcommit string = "[ not set ]"
+
 	invalidSyntaxMessage string = "syntax invalid"
 
 	usageMessage string = `Usage:
 	gosystrac [flags] filePath
 
 Flags:
-	--dumpfile, -d  	Handles a dump file instead of go executables.
-						To generate a dump file use: go tool objdump exeFilePath > file.dump
-
-	--template			Define a go template for the results. 
-						Example: {{- range . }}{{printf "%d - %s\n" .ID .Name}}{{- end}}
+	--dumpfile, -d    Handles a dump file instead of go executable.
+	--template	  Defines a go template for the results.
+			  Example: --template="{{- range . }}{{printf "%d - %s\n" .ID .Name}}{{- end}}"
 `
 
 	resultGoTemplate string = `{{if . -}}
@@ -70,7 +72,8 @@ func Run(output io.Writer, args []string, extract func(source systract.SourceRea
 
 	inputIsDumpFile, customFormat, fileName, err := parseInputValues(args)
 	if err != nil {
-		_, _ = output.Write([]byte(usageMessage))
+		usage := fmt.Sprintf("gosystract version %s\n%s", gitcommit, usageMessage)
+		_, _ = output.Write([]byte(usage))
 		return errors.New(invalidSyntaxMessage)
 	}
 
