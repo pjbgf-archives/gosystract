@@ -38,7 +38,7 @@ Usage:
 Flags:
     --dumpfile, -d    Handles a dump file instead of go executable.
     --template        Defines a go template for the results.
-                      Example: --template="{{- range . }}{{printf "%d - %s\n" .ID .Name}}{{- end}}"
+                      Example: --template='{{- range . }}{{printf "%d - %s\n" .ID .Name}}{{- end}}'
 ```
 
 Running against gosystract itself:
