@@ -15,7 +15,7 @@ var (
 	// gitcommit is set at compilation time through ldflags
 	gitcommit string = "[ not set ]"
 
-	invalidSyntaxMessage string = "syntax invalid"
+	invalidSyntaxMessage string = "invalid syntax"
 
 	usageMessage string = `Usage:
 	gosystrac [flags] filePath
