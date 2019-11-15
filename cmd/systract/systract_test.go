@@ -1,49 +1,29 @@
 package systract
 
 import (
-	"os"
 	"path/filepath"
 	"testing"
 
 	"github.com/golang-collections/collections/stack"
-	"github.com/stretchr/testify/assert"
+	"github.com/pjbgf/should"
 )
 
-func TestExtract_FileDoesNotExist(t *testing.T) {
-	assert := assert.New(t)
-	fileName := "/tmp/3216763872163876321"
+func TestExtract_Errors(t *testing.T) {
+	assertThat := func(assumption, fileName string, expectedLength int) {
+		should := should.New(t)
+		syscalls, err := Extract(NewDumpReader(fileName))
 
-	if _, err := os.Stat(fileName); err == nil {
-		assert.Fail("test cannot run because file should not exist")
+		should.Error(err, assumption)
+		should.BeEqual(len(syscalls), expectedLength, assumption)
 	}
 
-	syscalls, err := Extract(NewDumpReader(fileName))
-
-	assert.Error(err)
-	assert.Len(syscalls, 0)
-}
-
-func TestExtract_E2E_LibrariesNotSupported(t *testing.T) {
-	assert := assert.New(t)
-	fileName, _ := filepath.Abs("../../test/systrac.dump")
-
-	if _, err := os.Stat(fileName); err != nil {
-		assert.Fail("test cannot run because systrac sample file does not exist")
-	}
-
-	syscalls, err := Extract(NewDumpReader(fileName))
-
-	assert.Error(err)
-	assert.Len(syscalls, 0)
+	assertThat("should error when input file does not exist", "/tmp/3216763872163876321", 0)
+	assertThat("should error when input file is go library", "../../test/systrac.dump", 0)
 }
 
 func TestExtract_E2E_Executable(t *testing.T) {
-	assert := assert.New(t)
+	should := should.New(t)
 	fileName, _ := filepath.Abs("../../test/keyring.dump")
-
-	if _, err := os.Stat(fileName); err != nil {
-		assert.Fail("test cannot run because keyring sample file does not exist")
-	}
 
 	expected := []SystemCall{
 		{ID: 0x0, Name: "read"}, {ID: 0x18, Name: "sched_yield"},
@@ -58,18 +38,18 @@ func TestExtract_E2E_Executable(t *testing.T) {
 
 	actual, err := Extract(NewDumpReader(fileName))
 
-	assert.Nil(err)
-	assert.Equal(expected, actual)
+	should.BeNil(err, "should not error for keyring.dump")
+	should.BeEqual(expected, actual, "should match expected syscalls for keyring.dump")
 }
 
 func TestGetSyscallID(t *testing.T) {
 	assertThat := func(assumption, assemblyLine string, expectedId uint16, expectedMatch bool) {
-		assert := assert.New(t)
+		should := should.New(t)
 
 		id, ok := getSyscallID(assemblyLine)
 
-		assert.Equal(expectedMatch, ok)
-		assert.Equal(expectedId, id)
+		should.BeEqual(expectedMatch, ok, assumption)
+		should.BeEqual(expectedId, id, assumption)
 	}
 
 	assertThat("should support golang.org/x/sys/unix.Syscall calls", "zsyscall_linux_amd64.go:442	0x48bd75		48c704247d000000	MOVQ $0x7d, 0(SP)", 125, true)
@@ -79,11 +59,11 @@ func TestGetSyscallID(t *testing.T) {
 func TestIsCallInstruction(t *testing.T) {
 
 	assertThat := func(assumption, assemblyLine, expectedTarget string, expectedMatch bool) {
-		assert := assert.New(t)
+		should := should.New(t)
 		target, ok := getCallTarget(assemblyLine)
 
-		assert.Equal(expectedMatch, ok)
-		assert.Equal(expectedTarget, target)
+		should.BeEqual(expectedMatch, ok, assumption)
+		should.BeEqual(expectedTarget, target, assumption)
 	}
 
 	assertThat("should match runtime funcs", "main.go:35		0x48c3d8		e8c334fcff		CALL runtime.morestack_noctxt(SB)", "runtime.morestack_noctxt", true)
@@ -95,11 +75,11 @@ func TestIsCallInstruction(t *testing.T) {
 func TestGetSymbolName(t *testing.T) {
 
 	assertThat := func(assumption, assemblyLine, expectedName string, expectedMatch bool) {
-		assert := assert.New(t)
+		should := should.New(t)
 		actual, ok := getSymbolName(assemblyLine)
 
-		assert.Equal(expectedMatch, ok)
-		assert.Equal(expectedName, actual)
+		should.BeEqual(expectedMatch, ok, assumption)
+		should.BeEqual(expectedName, actual, assumption)
 	}
 
 	assertThat("should match main.main symbol", "TEXT main.main(SB) /media/pjb/src/git/learn-golang/caps/main.go", "main.main", true)
@@ -110,10 +90,10 @@ func TestGetSymbolName(t *testing.T) {
 func TestIsEndOfSymbolDefinition(t *testing.T) {
 
 	assertThat := func(assumption, assemblyLine string, expected bool) {
-		assert := assert.New(t)
+		should := should.New(t)
 		actual := isEndOfSymbol(assemblyLine)
 
-		assert.Equal(expected, actual)
+		should.BeEqual(expected, actual, assumption)
 	}
 
 	assertThat("should match line break", "\n", true)
@@ -125,10 +105,10 @@ func TestIsEndOfSymbolDefinition(t *testing.T) {
 func TestContainsSyscall(t *testing.T) {
 
 	assertThat := func(assumption, assemblyLine string, expected bool) {
-		assert := assert.New(t)
+		should := should.New(t)
 		containsSyscall := containsSyscall(assemblyLine)
 
-		assert.Equal(expected, containsSyscall)
+		should.BeEqual(expected, containsSyscall, assumption)
 	}
 
 	assertThat("should return true for syscall.Syscall instruction", "zsyscall_linux_amd64.go:310	0x47d56b		e8a0070000		CALL syscall.Syscall(SB)", true)
@@ -141,11 +121,11 @@ func TestContainsSyscall(t *testing.T) {
 func TestTryPopSyscallID(t *testing.T) {
 
 	assertThat := func(assumption, assemblyLine string, expectedID uint16, s *stack.Stack, expectedMatch bool) {
-		assert := assert.New(t)
+		should := should.New(t)
 		actual, ok := tryPopSyscallID(assemblyLine, s)
 
-		assert.Equal(expectedMatch, ok)
-		assert.Equal(expectedID, actual)
+		should.BeEqual(expectedMatch, ok, assumption)
+		should.BeEqual(expectedID, actual, assumption)
 	}
 
 	stack := stack.New()
@@ -159,15 +139,15 @@ func TestTryPopSyscallID(t *testing.T) {
 
 func TestStackSyscallIDIfNecessary(t *testing.T) {
 
-	assert := assert.New(t)
+	should := should.New(t)
 	stack := stack.New()
 	stackSyscallIDIfNecessary("zsyscall_linux_amd64.go:442	0x48bd75		48c704247d000000	MOVQ $0x7d, 0(SP)", stack)
 	stackSyscallIDIfNecessary("sys_linux.go:230	0x49554e		48c70424fa000000		MOVQ $0xfa, 0(SP)", stack)
 	stackSyscallIDIfNecessary("sys_linux_amd64.s:616	0x453aa5		48c7c702100000		MOVQ $0x1002, DI", stack)
 	stackSyscallIDIfNecessary("sys_linux_amd64.s:617	0x453aac		48c7c09e000000		MOVQ $0x9e, AX", stack)
 
-	assert.Equal(3, stack.Len())
-	assert.Equal(uint16(158), stack.Pop())
-	assert.Equal(uint16(250), stack.Pop())
-	assert.Equal(uint16(125), stack.Pop())
+	should.BeEqual(3, stack.Len(), "should only stack potential ids")
+	should.BeEqual(uint16(158), stack.Pop(), "should match ids in the correct order")
+	should.BeEqual(uint16(250), stack.Pop(), "should match ids in the correct order")
+	should.BeEqual(uint16(125), stack.Pop(), "should match ids in the correct order")
 }

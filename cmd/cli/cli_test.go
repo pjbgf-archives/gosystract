@@ -2,162 +2,94 @@ package cli
 
 import (
 	"bytes"
-	"reflect"
 	"testing"
 
 	"errors"
 
 	"github.com/pjbgf/gosystract/cmd/systract"
+	"github.com/pjbgf/should"
 )
 
 func TestParseInputValues(t *testing.T) {
+	assertThat := func(assumption string, args []string, expected string) {
+		should := should.New(t)
 
-	t.Run("should handle template flag", func(t *testing.T) {
+		_, actual, _, err := parseInputValues(args)
 
-		input := []string{"gosystract", "--template=\"test\"", ""}
-		_, template, _, err := parseInputValues(input)
+		should.NotError(err, assumption)
+		should.BeEqual(expected, actual, assumption)
+	}
 
-		got := template
-		want := "test"
-
-		if got != want {
-			t.Errorf("got %q, want %q", got, want)
-		}
-
-		if err != nil {
-			t.Error("should not error")
-		}
-	})
+	assertThat("should handle template flag", []string{"gosystract", "--template=\"test\"", ""}, "test")
 }
 
 func TestRun(t *testing.T) {
+	usageMessageTest := "gosystract version INJECTED\nUsage:\n\tgosystrac [flags] filePath\n\nFlags:\n\t--dumpfile, -d    Handles a dump file instead of go executable.\n\t--template\t  Defines a go template for the results.\n\t\t\t  Example: --template=\"{{- range . }}{{printf \"%d - %s\\n\" .ID .Name}}{{- end}}\"\n"
+	assertThat := func(assumption string, args []string,
+		stub func() ([]systract.SystemCall, error), expected string, expectedErr error) {
 
-	t.Run("should show usage when no args", func(t *testing.T) {
+		should := should.New(t)
 		gitcommit = "INJECTED"
-		args := []string{}
 		var output bytes.Buffer
 
-		err := Run(&output, args, func(source systract.SourceReader) ([]systract.SystemCall, error) {
-			return nil, errors.New("invalid systax")
+		actualErr := Run(&output, args, func(source systract.SourceReader) ([]systract.SystemCall, error) {
+			return stub()
 		})
 
-		got := output.String()
-		want := `gosystract version INJECTED
-Usage:
-	gosystrac [flags] filePath
+		actual := output.String()
 
-Flags:
-	--dumpfile, -d    Handles a dump file instead of go executable.
-	--template	  Defines a go template for the results.
-			  Example: --template="{{- range . }}{{printf "%d - %s\n" .ID .Name}}{{- end}}"
-`
+		should.BeEqual(expectedErr, actualErr, assumption)
+		should.BeEqual(expected, actual, assumption)
+	}
 
-		if got != want {
-			t.Errorf("got %q, want %q", got, want)
-		}
+	assertThat("should show usage when no args", []string{},
+		func() ([]systract.SystemCall, error) { return nil, errors.New("invalid systax") },
+		usageMessageTest,
+		errors.New("invalid syntax"))
 
-		if err == nil {
-			t.Error("should have returned error")
-		}
-	})
-
-	t.Run("should show syscalls found", func(t *testing.T) {
-		args := []string{"gosystract", "filename"}
-		var output bytes.Buffer
-
-		err := Run(&output, args, func(source systract.SourceReader) ([]systract.SystemCall, error) {
+	assertThat("should show syscalls found", []string{"gosystract", "filename"},
+		func() ([]systract.SystemCall, error) {
 			return []systract.SystemCall{{ID: 1, Name: "abc"}, {ID: 2, Name: "def"}}, nil
-		})
+		},
+		"2 system calls found:\n    abc (1)\n    def (2)\n", nil)
 
-		got := output.String()
-		want := "2 system calls found:\n    abc (1)\n    def (2)\n"
-
-		if got != want {
-			t.Errorf("got %q, want %q", got, want)
-		}
-
-		if err != nil {
-			t.Error(err)
-		}
-	})
-
-	t.Run("should support custom go template for results", func(t *testing.T) {
-		args := []string{"gosystract", "--template=\"{{- range . }}\"{{.Name}}\",{{- end}}\"", "filename"}
-		var output bytes.Buffer
-
-		err := Run(&output, args, func(source systract.SourceReader) ([]systract.SystemCall, error) {
+	assertThat("should support custom go template for results",
+		[]string{"gosystract", "--template=\"{{- range . }}\"{{.Name}}\",{{- end}}\"", "filename"},
+		func() ([]systract.SystemCall, error) {
 			return []systract.SystemCall{{ID: 1, Name: "abc"}, {ID: 2, Name: "def"}}, nil
-		})
+		},
+		"\"abc\",\"def\",", nil)
 
-		got := output.String()
-		want := "\"abc\",\"def\","
-
-		if got != want {
-			t.Errorf("got %q, want %q", got, want)
-		}
-
-		if err != nil {
-			t.Error(err)
-		}
-	})
-
-	t.Run("should show message when no syscalls are found", func(t *testing.T) {
-		args := []string{"gosystract", "filename"}
-		var output bytes.Buffer
-
-		err := Run(&output, args, func(source systract.SourceReader) ([]systract.SystemCall, error) {
+	assertThat("should show message when no syscalls are found",
+		[]string{"gosystract", "filename"},
+		func() ([]systract.SystemCall, error) {
 			return []systract.SystemCall{}, nil
-		})
+		},
+		"no systems calls were found\n", nil)
 
-		got := output.String()
-		want := "no systems calls were found\n"
+	assertThat("should be able to handle exec files",
+		[]string{"gosystract", "filename"},
+		func() ([]systract.SystemCall, error) {
+			return []systract.SystemCall{}, nil
+		},
+		"no systems calls were found\n", nil)
+}
 
-		if got != want {
-			t.Errorf("got %q, want %q", got, want)
-		}
-
-		if err != nil {
-			t.Error(err)
-		}
-	})
-
-	t.Run("should be able to handle exec files", func(t *testing.T) {
-		args := []string{"gosystract", "filename"}
+func TestRun_SourceReaders(t *testing.T) {
+	assertThat := func(assumption string, args []string, expected interface{}) {
+		should := should.New(t)
 		var output bytes.Buffer
 
 		Run(&output, args, func(source systract.SourceReader) ([]systract.SystemCall, error) {
-
-			// As interface types are only used for static typing, a
-			// common idiom to find the reflection Type for an interface
-			// type Foo is to use a *Foo value.
-			exeReaderType := reflect.TypeOf((*systract.ExeReader)(nil))
-
-			sourceReaderType := reflect.TypeOf(source)
-
-			if sourceReaderType != exeReaderType {
-				t.FailNow()
-			}
+			should.HaveSameType(expected, source, "should be able to handle dump files")
 			return []systract.SystemCall{}, nil
 		})
-	})
+	}
 
-	t.Run("should be able to handle dump files", func(t *testing.T) {
-		args := []string{"gosystract", "--dumpfile", "filename"}
-		var output bytes.Buffer
-
-		Run(&output, args, func(source systract.SourceReader) ([]systract.SystemCall, error) {
-
-			// As interface types are only used for static typing, a
-			// common idiom to find the reflection Type for an interface
-			// type Foo is to use a *Foo value.
-			dumpReaderType := reflect.TypeOf((*systract.DumpReader)(nil))
-
-			sourceReaderType := reflect.TypeOf(source)
-
-			if sourceReaderType != dumpReaderType {
-				t.FailNow()
-			}
-			return []systract.SystemCall{}, nil
-		})
-	})
+	assertThat("should be able to handle exec files",
+		[]string{"gosystract", "filename"},
+		&systract.ExeReader{})
+	assertThat("should be able to handle dump files",
+		[]string{"gosystract", "--dumpfile", "filename"},
+		&systract.DumpReader{})
 }

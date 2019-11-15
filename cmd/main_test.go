@@ -4,17 +4,19 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/pjbgf/should"
 )
 
 func TestMain_Integration(t *testing.T) {
-	assert := assert.New(t)
+	assertThat := func(assumption, filePath, expected string) {
+		should := should.New(t)
+		var output bytes.Buffer
+		run(&output, []string{"gosystract", "--dumpfile", "../test/single-syscall.dump"})
 
-	var output bytes.Buffer
-	run(&output, []string{"gosystract", "--dumpfile", "../test/single-syscall.dump"})
+		actual := output.String()
 
-	actual := output.String()
-	expected := "1 system calls found:\n    exit_group (231)"
+		should.BeEqual(actual, expected, assumption)
+	}
 
-	assert.Contains(actual, expected)
+	assertThat("should return exit_group call for single-syscall.dump", "../test/single-syscall.dump", "1 system calls found:\n    exit_group (231)\n")
 }
