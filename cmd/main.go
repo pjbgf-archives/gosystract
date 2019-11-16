@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 
 	cli "github.com/pjbgf/gosystract/cmd/cli"
@@ -8,13 +9,8 @@ import (
 )
 
 var onError func(error) = func(err error) {
-	defer func() {
-		if rec := recover(); rec != nil {
-			os.Exit(1)
-		}
-	}()
-
-	panic(err)
+	fmt.Printf("\nerror: %s\n", err)
+	os.Exit(1)
 }
 
 func main() {
