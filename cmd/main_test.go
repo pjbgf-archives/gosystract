@@ -1,6 +1,8 @@
 package main
 
 import (
+	"io/ioutil"
+	"os"
 	"os/exec"
 	"strings"
 	"testing"
@@ -11,17 +13,25 @@ import (
 func TestMain_E2E(t *testing.T) {
 	assertThat := func(assumption string, args []string, expected string) {
 		should := should.New(t)
-		cmd := exec.Command(args[0], args[1:]...)
+		tmpfile, err := ioutil.TempFile("", "fakestdout.*")
+		if err != nil {
+			t.Errorf("could not setup test properly, got error: %s", err)
+		}
+		defer os.Remove(tmpfile.Name())
 
-		output, err := cmd.CombinedOutput()
-		actual := string(output)
+		os.Args = []string{"gosystract", "--dumpfile", "../test/single-syscall.dump"}
+		os.Stdout = tmpfile
 
-		should.NotError(err, assumption)
+		main()
+
+		contents, err := ioutil.ReadFile(tmpfile.Name())
+		actual := string(contents)
+
 		should.BeEqual(expected, actual, assumption)
 	}
 
 	assertThat("should return exit_group call for single-syscall.dump",
-		strings.Split("go run main.go -test.run=TestMain_E2E --dumpfile ../test/single-syscall.dump", " "),
+		strings.Split("gosystract --dumpfile ../test/single-syscall.dump", " "),
 		"1 system calls found:\n    exit_group (231)\n")
 }
 
