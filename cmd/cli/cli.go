@@ -111,7 +111,8 @@ func Run(output io.Writer, args []string, extract func(source systract.SourceRea
 	}
 }
 
-func writeResults(output io.Writer, syscalls []systract.SystemCall, customFormat string) error {
+func writeResults(output io.Writer, syscalls []systract.SystemCall, customFormat string) (err error) {
+	defer recoverError(&err)
 	var t *template.Template
 	if customFormat != "" {
 		t = template.Must(template.New("result").Parse(customFormat))
@@ -119,5 +120,16 @@ func writeResults(output io.Writer, syscalls []systract.SystemCall, customFormat
 		t = template.Must(template.New("result").Parse(resultGoTemplate))
 	}
 
-	return t.Execute(output, syscalls)
+	e := t.Execute(output, syscalls)
+	if e != nil {
+		err = errors.New("invalid go template")
+	}
+
+	return
+}
+
+func recoverError(err *error) {
+	if e := recover(); e != nil {
+		*err = errors.New("invalid go template")
+	}
 }

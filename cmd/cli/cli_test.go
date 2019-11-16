@@ -76,6 +76,30 @@ func TestRun(t *testing.T) {
 			return []systract.SystemCall{}, nil
 		},
 		"no systems calls were found\n", nil)
+
+	assertThat("should not write results if extract failed",
+		[]string{"gosystract", "filename"},
+		func() ([]systract.SystemCall, error) {
+			return nil, errors.New("could not extract syscalls")
+		},
+		"",
+		errors.New("could not extract syscalls"))
+
+	assertThat("should error for invalid go template syntax",
+		[]string{"gosystract", "--template=\"{{$%£}\"", "filename"},
+		func() ([]systract.SystemCall, error) {
+			return []systract.SystemCall{{ID: 1, Name: "abc"}, {ID: 2, Name: "def"}}, nil
+		},
+		"",
+		errors.New("invalid go template"))
+
+	assertThat("should error for invalid go template syntax",
+		[]string{"gosystract", "--template=\"{{.Something}}\"", "filename"},
+		func() ([]systract.SystemCall, error) {
+			return []systract.SystemCall{{ID: 1, Name: "abc"}, {ID: 2, Name: "def"}}, nil
+		},
+		"",
+		errors.New("invalid go template"))
 }
 
 func TestRun_SourceReaders(t *testing.T) {
