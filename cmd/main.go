@@ -8,10 +8,11 @@ import (
 	"github.com/pjbgf/gosystract/cmd/systract"
 )
 
+var onError func(error) = func(err error) {
+	fmt.Printf("\nerror: %s\n", err)
+	os.Exit(1)
+}
+
 func main() {
-	err := cli.Run(os.Stdout, os.Args, systract.Extract)
-	if err != nil {
-		fmt.Printf("\nerror: %s\n", err)
-		os.Exit(1)
-	}
+	cli.Run(os.Stdout, os.Args, systract.Extract, onError)
 }

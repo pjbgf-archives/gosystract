@@ -31,9 +31,12 @@ func TestRun(t *testing.T) {
 		should := should.New(t)
 		gitcommit = "INJECTED"
 		var output bytes.Buffer
+		var actualErr error
 
-		actualErr := Run(&output, args, func(source systract.SourceReader) ([]systract.SystemCall, error) {
+		Run(&output, args, func(source systract.SourceReader) ([]systract.SystemCall, error) {
 			return stub()
+		}, func(err error) {
+			actualErr = err
 		})
 
 		actual := output.String()
@@ -79,11 +82,16 @@ func TestRun_SourceReaders(t *testing.T) {
 	assertThat := func(assumption string, args []string, expected interface{}) {
 		should := should.New(t)
 		var output bytes.Buffer
+		var actualErr error
 
 		Run(&output, args, func(source systract.SourceReader) ([]systract.SystemCall, error) {
 			should.HaveSameType(expected, source, "should be able to handle dump files")
 			return []systract.SystemCall{}, nil
+		}, func(err error) {
+			actualErr = err
 		})
+
+		should.NotError(actualErr, assumption)
 	}
 
 	assertThat("should be able to handle exec files",

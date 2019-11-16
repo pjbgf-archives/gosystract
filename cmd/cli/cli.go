@@ -81,13 +81,15 @@ Flag options:
 
 --template        Defines a go template for the results.
 */
-func Run(output io.Writer, args []string, extract func(source systract.SourceReader) ([]systract.SystemCall, error)) error {
+func Run(output io.Writer, args []string, extract func(source systract.SourceReader) ([]systract.SystemCall, error),
+	onError func(error)) {
 
 	inputIsDumpFile, customFormat, fileName, err := parseInputValues(args)
 	if err != nil {
 		usage := fmt.Sprintf("gosystract version %s\n%s", gitcommit, usageMessage)
 		_, _ = output.Write([]byte(usage))
-		return errors.New(invalidSyntaxMessage)
+		onError(errors.New(invalidSyntaxMessage))
+		return
 	}
 
 	var sourceReader systract.SourceReader
@@ -99,10 +101,14 @@ func Run(output io.Writer, args []string, extract func(source systract.SourceRea
 
 	syscalls, err := extract(sourceReader)
 	if err != nil {
-		return err
+		onError(err)
+		return
 	}
 
-	return writeResults(output, syscalls, customFormat)
+	err = writeResults(output, syscalls, customFormat)
+	if err != nil {
+		onError(err)
+	}
 }
 
 func writeResults(output io.Writer, syscalls []systract.SystemCall, customFormat string) error {
