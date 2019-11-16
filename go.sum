@@ -1,3 +1,6 @@
 github.com/golang-collections/collections v0.0.0-20130729185459-604e922904d3 h1:zN2lZNZRflqFyxVaTIU61KNKQ9C0055u9CAfpmqUvo4=
-github.com/pjbgf/should v0.0.1 h1:GX64kS5WZ8GPwD/KCR/uB6phJqZLIX8KhXWaefJiknA=
+github.com/golang-collections/collections v0.0.0-20130729185459-604e922904d3/go.mod h1:nPpo7qLxd6XL3hWJG/O60sR8ZKfMCiIoNap5GvD12KU=
+github.com/pjbgf/should v0.0.0-20191116082713-ffee22f8b287 h1:onC9ltorvEX09q0GKaPKhJefMgQ5bMZF3CNoEeUxtM8=
+github.com/pjbgf/should v0.0.0-20191116082713-ffee22f8b287/go.mod h1:ei/fSTDYq9Ar7mIjfXG7sw3WCZDNFTZ16HHUMUksHeU=
 github.com/pkg/errors v0.8.1 h1:iURUrRGxPUNPdy5/HRSm+Yj6okJ6UtLINN0Q9M4+h3I=
+github.com/pkg/errors v0.8.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
