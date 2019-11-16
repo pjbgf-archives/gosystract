@@ -24,7 +24,7 @@ func TestParseInputValues(t *testing.T) {
 }
 
 func TestRun(t *testing.T) {
-	usageMessageTest := "gosystract version INJECTED\nUsage:\n\tgosystrac [flags] filePath\n\nFlags:\n\t--dumpfile, -d    Handles a dump file instead of go executable.\n\t--template\t  Defines a go template for the results.\n\t\t\t  Example: --template=\"{{- range . }}{{printf \"%d - %s\\n\" .ID .Name}}{{- end}}\"\n"
+	usageMessageTest := "gosystract version INJECTED\nUsage:\ngosystrac [flags] filePath\n\nFlags:\n\t--dumpfile, -d    Handles a dump file instead of go executable.\n\t--template\t  Defines a go template for the results.\n\t\t\t  Example: --template=\"{{- range . }}{{printf \"%d - %s\\n\" .ID .Name}}{{- end}}\"\n"
 	assertThat := func(assumption string, args []string,
 		stub func() ([]systract.SystemCall, error), expected string, expectedErr error) {
 

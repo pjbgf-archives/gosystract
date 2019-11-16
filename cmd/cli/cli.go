@@ -18,7 +18,7 @@ var (
 	invalidSyntaxMessage string = "invalid syntax"
 
 	usageMessage string = `Usage:
-	gosystrac [flags] filePath
+gosystrac [flags] filePath
 
 Flags:
 	--dumpfile, -d    Handles a dump file instead of go executable.
