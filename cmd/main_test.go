@@ -21,7 +21,7 @@ func TestMain_E2E(t *testing.T) {
 	}
 
 	assertThat("should return exit_group call for single-syscall.dump",
-		strings.Split("gosystract -test.run=TestMain_E2E --dumpfile ../test/single-syscall.dump", " "),
+		strings.Split("go run main.go -test.run=TestMain_E2E --dumpfile ../test/single-syscall.dump", " "),
 		"1 system calls found:\n    exit_group (231)\n")
 }
 
@@ -37,6 +37,6 @@ func TestMain_ExitCodes_E2E(t *testing.T) {
 	}
 
 	assertThat("should exit with exit code 1 for invalid syntax",
-		strings.Split("gosystract -test.run=TestMain_ExitCodes_E2E", " "),
+		strings.Split("go run main.go -test.run=TestMain_ExitCodes_E2E", " "),
 		"exit status 1")
 }
