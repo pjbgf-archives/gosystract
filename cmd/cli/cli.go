@@ -18,7 +18,7 @@ var (
 	invalidSyntaxMessage string = "invalid syntax"
 
 	usageMessage string = `Usage:
-	gosystrac [flags] filePath
+gosystrac [flags] filePath
 
 Flags:
 	--dumpfile, -d    Handles a dump file instead of go executable.
@@ -81,13 +81,15 @@ Flag options:
 
 --template        Defines a go template for the results.
 */
-func Run(output io.Writer, args []string, extract func(source systract.SourceReader) ([]systract.SystemCall, error)) error {
+func Run(output io.Writer, args []string, extract func(source systract.SourceReader) ([]systract.SystemCall, error),
+	onError func(error)) {
 
 	inputIsDumpFile, customFormat, fileName, err := parseInputValues(args)
 	if err != nil {
 		usage := fmt.Sprintf("gosystract version %s\n%s", gitcommit, usageMessage)
 		_, _ = output.Write([]byte(usage))
-		return errors.New(invalidSyntaxMessage)
+		onError(errors.New(invalidSyntaxMessage))
+		return
 	}
 
 	var sourceReader systract.SourceReader
@@ -99,13 +101,18 @@ func Run(output io.Writer, args []string, extract func(source systract.SourceRea
 
 	syscalls, err := extract(sourceReader)
 	if err != nil {
-		return err
+		onError(err)
+		return
 	}
 
-	return writeResults(output, syscalls, customFormat)
+	err = writeResults(output, syscalls, customFormat)
+	if err != nil {
+		onError(err)
+	}
 }
 
-func writeResults(output io.Writer, syscalls []systract.SystemCall, customFormat string) error {
+func writeResults(output io.Writer, syscalls []systract.SystemCall, customFormat string) (err error) {
+	defer recoverError(&err)
 	var t *template.Template
 	if customFormat != "" {
 		t = template.Must(template.New("result").Parse(customFormat))
@@ -113,5 +120,16 @@ func writeResults(output io.Writer, syscalls []systract.SystemCall, customFormat
 		t = template.Must(template.New("result").Parse(resultGoTemplate))
 	}
 
-	return t.Execute(output, syscalls)
+	e := t.Execute(output, syscalls)
+	if e != nil {
+		err = errors.New("invalid go template")
+	}
+
+	return
+}
+
+func recoverError(err *error) {
+	if e := recover(); e != nil {
+		*err = errors.New("invalid go template")
+	}
 }

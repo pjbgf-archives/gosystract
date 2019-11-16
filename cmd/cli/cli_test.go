@@ -24,16 +24,19 @@ func TestParseInputValues(t *testing.T) {
 }
 
 func TestRun(t *testing.T) {
-	usageMessageTest := "gosystract version INJECTED\nUsage:\n\tgosystrac [flags] filePath\n\nFlags:\n\t--dumpfile, -d    Handles a dump file instead of go executable.\n\t--template\t  Defines a go template for the results.\n\t\t\t  Example: --template=\"{{- range . }}{{printf \"%d - %s\\n\" .ID .Name}}{{- end}}\"\n"
+	usageMessageTest := "gosystract version INJECTED\nUsage:\ngosystrac [flags] filePath\n\nFlags:\n\t--dumpfile, -d    Handles a dump file instead of go executable.\n\t--template\t  Defines a go template for the results.\n\t\t\t  Example: --template=\"{{- range . }}{{printf \"%d - %s\\n\" .ID .Name}}{{- end}}\"\n"
 	assertThat := func(assumption string, args []string,
 		stub func() ([]systract.SystemCall, error), expected string, expectedErr error) {
 
 		should := should.New(t)
 		gitcommit = "INJECTED"
 		var output bytes.Buffer
+		var actualErr error
 
-		actualErr := Run(&output, args, func(source systract.SourceReader) ([]systract.SystemCall, error) {
+		Run(&output, args, func(source systract.SourceReader) ([]systract.SystemCall, error) {
 			return stub()
+		}, func(err error) {
+			actualErr = err
 		})
 
 		actual := output.String()
@@ -73,17 +76,46 @@ func TestRun(t *testing.T) {
 			return []systract.SystemCall{}, nil
 		},
 		"no systems calls were found\n", nil)
+
+	assertThat("should not write results if extract failed",
+		[]string{"gosystract", "filename"},
+		func() ([]systract.SystemCall, error) {
+			return nil, errors.New("could not extract syscalls")
+		},
+		"",
+		errors.New("could not extract syscalls"))
+
+	assertThat("should error for invalid go template syntax",
+		[]string{"gosystract", "--template=\"{{$%£}\"", "filename"},
+		func() ([]systract.SystemCall, error) {
+			return []systract.SystemCall{{ID: 1, Name: "abc"}, {ID: 2, Name: "def"}}, nil
+		},
+		"",
+		errors.New("invalid go template"))
+
+	assertThat("should error for invalid go template syntax",
+		[]string{"gosystract", "--template=\"{{.Something}}\"", "filename"},
+		func() ([]systract.SystemCall, error) {
+			return []systract.SystemCall{{ID: 1, Name: "abc"}, {ID: 2, Name: "def"}}, nil
+		},
+		"",
+		errors.New("invalid go template"))
 }
 
 func TestRun_SourceReaders(t *testing.T) {
 	assertThat := func(assumption string, args []string, expected interface{}) {
 		should := should.New(t)
 		var output bytes.Buffer
+		var actualErr error
 
 		Run(&output, args, func(source systract.SourceReader) ([]systract.SystemCall, error) {
 			should.HaveSameType(expected, source, "should be able to handle dump files")
 			return []systract.SystemCall{}, nil
+		}, func(err error) {
+			actualErr = err
 		})
+
+		should.NotError(actualErr, assumption)
 	}
 
 	assertThat("should be able to handle exec files",
