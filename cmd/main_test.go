@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/pjbgf/should"
+	"github.com/pjbgf/go-test/should"
 )
 
 var usageMessage string = `gosystract version [ not set ]
@@ -21,7 +21,7 @@ Flags:
 			  Example: --template="{{- range . }}{{printf "%d - %s\n" .ID .Name}}{{- end}}"
 `
 
-func TestMain_E2E(t *testing.T) {
+func TestMain(t *testing.T) {
 	assertThat := func(assumption string, args []string, expected string, expectedErr error) {
 		should := should.New(t)
 		tmpfile, err := ioutil.TempFile("", "fakestdout.*")
@@ -56,7 +56,7 @@ func TestMain_E2E(t *testing.T) {
 		errors.New("invalid syntax"))
 }
 
-func TestMain_ExitCodes_E2E(t *testing.T) {
+func TestMain_ExitCodes(t *testing.T) {
 	assertThat := func(assumption string, args []string, expected string) {
 		should := should.New(t)
 		cmd := exec.Command(args[0], args[1:]...)
@@ -68,6 +68,6 @@ func TestMain_ExitCodes_E2E(t *testing.T) {
 	}
 
 	assertThat("should exit with exit code 1 for invalid syntax",
-		strings.Split("go run main.go -test.run=TestMain_ExitCodes_E2E", " "),
+		strings.Split("go test -test.run=TestMain_ExitCodes main", " "),
 		"exit status 1")
 }

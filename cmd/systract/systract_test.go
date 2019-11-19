@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/golang-collections/collections/stack"
-	"github.com/pjbgf/should"
+	"github.com/pjbgf/go-test/should"
 )
 
 func TestExtract_Errors(t *testing.T) {

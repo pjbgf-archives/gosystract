@@ -6,8 +6,8 @@ import (
 
 	"errors"
 
+	"github.com/pjbgf/go-test/should"
 	"github.com/pjbgf/gosystract/cmd/systract"
-	"github.com/pjbgf/should"
 )
 
 func TestParseInputValues(t *testing.T) {
