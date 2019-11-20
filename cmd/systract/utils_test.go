@@ -25,6 +25,7 @@ func TestFileExists(t *testing.T) {
 }
 
 func TestSanitiseFileName(t *testing.T) {
+	wdSnapshot, _ := os.Getwd()
 	// creates tmp folder to make the expected filepath more predictable
 	tmpFolder, err := ioutil.TempDir("", "zaz-test")
 	if err != nil {
@@ -55,4 +56,7 @@ func TestSanitiseFileName(t *testing.T) {
 
 	assertThat("should error if can't get current folder", "", "",
 		errors.New("error getting current folder"))
+
+	// returns snapshotted working directory to ensure other tests' repeatability
+	os.Chdir(wdSnapshot)
 }
