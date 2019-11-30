@@ -21,7 +21,7 @@ var (
 gosystrac [flags] filePath
 
 Flags:
-	--dumpfile, -d    Handles a dump file instead of go executable.
+	--dumpfile, -d    Handles a dump file instead of a go executable.
 	--template	  Defines a go template for the results.
 `
 
