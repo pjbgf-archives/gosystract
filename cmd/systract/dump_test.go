@@ -1,34 +1,44 @@
 package systract
 
 import (
+	"io/ioutil"
 	"os"
 	"testing"
+
+	"github.com/pjbgf/go-test/should"
 )
 
 func TestDumpReader_GetReader_Integration(t *testing.T) {
+	assertThat := func(assumption, filePath string, expectedErr bool) {
+		should := should.New(t)
+		reader := NewDumpReader(filePath)
 
-	t.Run("should error when file not found", func(t *testing.T) {
-
-		reader := NewDumpReader("file-that-dont-exist")
 		_, err := reader.GetReader()
 
-		if err == nil {
-			t.Error("should error")
-		}
-	})
+		hasErrored := err != nil
+		should.BeEqual(expectedErr, hasErrored, assumption)
+	}
 
-	t.Run("should be able open current executable", func(t *testing.T) {
-		path, _ := os.Executable()
+	assertThat("should error when file not found",
+		"file-that-dont-exist",
+		true)
+	assertThat("should be able to process sample dump",
+		"../../test/single-syscall.dump",
+		false)
 
-		reader := NewDumpReader(path)
-		r, err := reader.GetReader()
+	// test the handling of current chdir being deleted
+	wdSnapshot, _ := os.Getwd()
+	tmpFolder, err := ioutil.TempDir("", "zaz-test")
+	if err != nil {
+		t.Error(err)
+		t.FailNow()
+	}
+	os.Chdir(tmpFolder)
+	os.Remove(tmpFolder)
 
-		if err != nil {
-			t.Error("should not error")
-		}
+	assertThat("should error if current directly disappears",
+		"any-file", true)
 
-		if r == nil {
-			t.Error("reader should not be nil")
-		}
-	})
+	// returns snapshotted working directory to ensure other tests' repeatability
+	os.Chdir(wdSnapshot)
 }

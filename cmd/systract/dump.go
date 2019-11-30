@@ -18,7 +18,7 @@ func NewDumpReader(dumpFilePath string) *DumpReader {
 }
 
 // GetReader returns a io.Reader based of the filePath
-func (d *DumpReader) GetReader() (io.Reader, error) {
+func (d *DumpReader) GetReader() (io.ReadCloser, error) {
 	filePath, err := sanitiseFileName(d.filePath)
 	if err != nil {
 		return nil, err

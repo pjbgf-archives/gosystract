@@ -34,7 +34,7 @@ type symbolDefinition struct {
 
 // SourceReader defines the interface for source readers
 type SourceReader interface {
-	GetReader() (io.Reader, error)
+	GetReader() (io.ReadCloser, error)
 }
 
 // Extract returns all system calls made in the execution path of the dumpFile provided.
@@ -43,6 +43,7 @@ func Extract(source SourceReader) ([]SystemCall, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer reader.Close()
 
 	symbols := parseDump(reader)
 	if _, isExe := symbols[executableSymbolCalls[0]]; !isExe {
