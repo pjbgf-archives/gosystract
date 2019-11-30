@@ -115,11 +115,10 @@ func Run(stdOut io.Writer, stdErr io.Writer, args []string, extract func(source 
 
 func writeResults(output io.Writer, syscalls []systract.SystemCall, customFormat string) (err error) {
 	defer recoverError(&err)
-	var t *template.Template
+
+	t := template.Must(template.New("result").Parse(resultGoTemplate))
 	if customFormat != "" {
 		t = template.Must(template.New("result").Parse(customFormat))
-	} else {
-		t = template.Must(template.New("result").Parse(resultGoTemplate))
 	}
 
 	e := t.Execute(output, syscalls)
