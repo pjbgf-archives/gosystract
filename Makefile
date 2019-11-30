@@ -4,7 +4,7 @@ VERSION := $(shell git describe --tags --always)
 GOBASE := $(shell pwd)
 GOPATH := $(GOBASE)/vendor:$(GOBASE)
 GOBIN := $(GOBASE)/bin
-GOFILES := $(wildcard *.go)
+GOFILES := $(wildcard cmd/*.go)
 
 GOSECNAME := "gosec_2.0.0_linux_amd64"
 
