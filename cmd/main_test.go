@@ -1,7 +1,7 @@
 package main
 
 import (
-	"errors"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -22,7 +22,7 @@ Flags:
 `
 
 func TestMain(t *testing.T) {
-	assertThat := func(assumption string, args []string, expected string, expectedErr error) {
+	assertThat := func(assumption string, args []string, expected string) {
 		should := should.New(t)
 		tmpfile, err := ioutil.TempFile("", "fakestdout.*")
 		if err != nil {
@@ -30,44 +30,63 @@ func TestMain(t *testing.T) {
 		}
 		defer os.Remove(tmpfile.Name())
 
-		var actualErr error
 		os.Args = args
 		os.Stdout = tmpfile
-		onError = func(err error) {
-			actualErr = err
-		}
 
 		main()
 
 		contents, err := ioutil.ReadFile(tmpfile.Name())
 		actual := string(contents)
 
-		should.BeEqual(expectedErr, actualErr, assumption)
 		should.BeEqual(expected, actual, assumption)
 	}
 
 	assertThat("should return exit_group call for single-syscall.dump",
 		strings.Split("gosystract --dumpfile ../test/single-syscall.dump", " "),
-		"1 system calls found:\n    exit_group (231)\n", nil)
-
-	assertThat("should error for invalid syntax",
-		strings.Split("gosystract", " "),
-		usageMessage,
-		errors.New("invalid syntax"))
+		"1 system calls found:\n    exit_group (231)\n")
 }
 
-func TestMain_ExitCodes(t *testing.T) {
-	assertThat := func(assumption string, args []string, expected string) {
+func TestMain_ErrorCodes(t *testing.T) {
+	assertThat := func(assumption, command, expectedErr, expectedOutput string) {
 		should := should.New(t)
-		cmd := exec.Command(args[0], args[1:]...)
-		err := cmd.Run()
+		exe, _ := os.Executable()
 
-		e, _ := err.(*exec.ExitError)
+		cmd := exec.Command(exe, "-test.run", "^TestMain_ErrorCodes_Inception$")
+		cmd.Env = append(cmd.Env, fmt.Sprintf("ErrorCodes_Args=%s", command))
 
-		should.BeEqual(expected, e.Error(), assumption)
+		output, err := cmd.CombinedOutput()
+
+		e, ok := err.(*exec.ExitError)
+
+		if !ok {
+			t.Log("was expecting exit code which did not happen")
+			t.FailNow()
+		}
+
+		actualOutput := string(output)
+
+		should.BeEqual(expectedErr, e.Error(), assumption)
+		should.BeEqual(expectedOutput, actualOutput, assumption)
 	}
 
-	assertThat("should exit with exit code 1 for invalid syntax",
-		strings.Split("go test -test.run=TestMain_ExitCodes main", " "),
-		"exit status 1")
+	assertThat("should exit with code 1 if no args provided", "gosystract", "exit status 1",
+		`gosystract version [ not set ]
+Usage:
+gosystrac [flags] filePath
+
+Flags:
+	--dumpfile, -d    Handles a dump file instead of a go executable.
+	--template	  Defines a go template for the results.
+
+error: invalid syntax
+`)
+}
+
+func TestMain_ErrorCodes_Inception(t *testing.T) {
+	args := os.Getenv("ErrorCodes_Args")
+	if args != "" {
+		os.Args = strings.Split(args, " ")
+
+		main()
+	}
 }

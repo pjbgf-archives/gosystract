@@ -25,7 +25,7 @@ If you don't have $GOPATH/bin in your $PATH, prefix the command with:
 
 `PATH=$PATH:$GOPATH/bin gosystract`
 
-> Note that gosystract has a dependency to go tools when working against executable files. On those scenarios, ensure they are in your $PATH.
+> Note that gosystract has a dependency to the go tools when working against executable files. In that case, ensure that `go` is in your $PATH.
 
 ## Command-line Usage:
 
@@ -36,7 +36,7 @@ Usage:
 	gosystrac [flags] filePath
 
 Flags:
-    --dumpfile, -d    Handles a dump file instead of go executable.
+    --dumpfile, -d    Handles a dump file instead of a go executable.
     --template        Defines a go template for the results.
                       Example: --template='{{- range . }}{{printf "%d - %s\n" .ID .Name}}{{- end}}'
 ```

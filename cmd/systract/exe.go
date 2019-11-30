@@ -20,8 +20,8 @@ func NewExeReader(exeFilePath string) *ExeReader {
 	return &ExeReader{exeFilePath}
 }
 
-// GetReader returns a io.Reader based of the filePath
-func (e *ExeReader) GetReader() (io.Reader, error) {
+// GetReader returns a io.ReadCloser based of the filePath
+func (e *ExeReader) GetReader() (io.ReadCloser, error) {
 	filePath, err := sanitiseFileName(e.filePath)
 	if err != nil {
 		return nil, err
@@ -38,7 +38,7 @@ func getObjDumpFilePath() string {
 	return fmt.Sprintf("/usr/local/go/pkg/tool/%s_%s/objdump", runtime.GOOS, runtime.GOARCH)
 }
 
-func getFileDumpReader(objDumpFilePath, filePath string) (io.Reader, error) {
+func getFileDumpReader(objDumpFilePath, filePath string) (io.ReadCloser, error) {
 	/* #nosec filePath is pre-processed by sanitiseFileName */
 	cmd := exec.Command(objDumpFilePath, filePath)
 
@@ -48,10 +48,7 @@ func getFileDumpReader(objDumpFilePath, filePath string) (io.Reader, error) {
 	}
 
 	output, err := cmd.StdoutPipe()
-
-	if err := cmd.Start(); err != nil {
-		return nil, err
-	}
+	defer cmd.Start()
 
 	return output, err
 }

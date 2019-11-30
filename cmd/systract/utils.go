@@ -1,11 +1,10 @@
 package systract
 
 import (
+	"errors"
 	"os"
 	"path"
 	"path/filepath"
-
-	"github.com/pkg/errors"
 )
 
 func fileExists(fileName string) bool {
@@ -17,13 +16,14 @@ func fileExists(fileName string) bool {
 }
 
 func sanitiseFileName(input string) (string, error) {
-	if !path.IsAbs(input) {
+	p := filepath.Clean(input)
+	if !path.IsAbs(p) {
 		base, err := os.Getwd()
 		if err != nil {
-			return "", errors.Wrap(err, "error getting current folder")
+			return "", errors.New("error getting current folder")
 		}
 
-		return filepath.Join(base, filepath.Clean(input)), nil
+		return filepath.Join(base, p), nil
 	}
-	return input, nil
+	return p, nil
 }

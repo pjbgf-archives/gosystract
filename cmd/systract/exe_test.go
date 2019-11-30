@@ -2,51 +2,67 @@ package systract
 
 import (
 	"bufio"
+	"io/ioutil"
 	"os"
+	"strings"
 	"testing"
+
+	"github.com/pjbgf/go-test/should"
 )
 
 func TestExeReader_GetReader_Integration(t *testing.T) {
+	assertThat := func(assumption, filePath string, expectedErr bool) {
+		should := should.New(t)
+		reader := NewExeReader(filePath)
 
-	t.Run("should error when file not found", func(t *testing.T) {
-
-		reader := NewExeReader("file-that-dont-exist")
 		_, err := reader.GetReader()
 
-		if err == nil {
-			t.Error("should error")
-		}
-	})
+		hasErrored := err != nil
+		should.BeEqual(expectedErr, hasErrored, assumption)
+	}
 
-	t.Run("should be able disassemble current executable", func(t *testing.T) {
-		path, _ := os.Executable()
+	assertThat("should error when file not found",
+		"file-that-dont-exist",
+		true)
 
-		reader := NewExeReader(path)
-		r, err := reader.GetReader()
+	assertThat("should be able disassemble current executable",
+		"../../test/simple-app",
+		false)
 
-		if err != nil {
-			t.Error("should not error")
-		}
+	// test the handling of current chdir being deleted
+	wdSnapshot, _ := os.Getwd()
+	tmpFolder, err := ioutil.TempDir("", "zaz-test")
+	if err != nil {
+		t.Error(err)
+		t.FailNow()
+	}
+	os.Chdir(tmpFolder)
+	os.Remove(tmpFolder)
 
-		if r == nil {
-			t.Error("reader should not be nil")
-		}
-	})
+	assertThat("should error if current directly disappears",
+		"any-file", true)
+
+	// returns snapshotted working directory to ensure other tests' repeatability
+	os.Chdir(wdSnapshot)
 }
 
 func TestGetFileDumpReader(t *testing.T) {
-	reader, err := getFileDumpReader("/bin/echo", "123456")
+	assertThat := func(assumption, objDumpPath, input, expectedPrefix string,
+		expectedErr error) {
+		should := should.New(t)
 
-	scanner := bufio.NewScanner(reader)
-	scanner.Scan()
-	got := scanner.Text()
-	want := "123456"
+		reader, err := getFileDumpReader(objDumpPath, input)
+		scanner := bufio.NewScanner(reader)
+		scanner.Scan()
+		actual := scanner.Text()
+		reader.Close()
 
-	if err != nil {
-		t.Error("should not error")
+		hasPrefix := strings.HasPrefix(actual, expectedPrefix)
+
+		should.BeTrue(hasPrefix, assumption)
+		should.BeEqual(expectedErr, err, assumption)
 	}
 
-	if got != want {
-		t.Errorf("got %q, want %q", got, want)
-	}
+	assertThat("should support custom objDump path", "/bin/echo", "123456", "123456", nil)
+	assertThat("should fallback to default if path does not exist", "/bin/echo1", "../../test/simple-app", "TEXT internal/cpu.Initialize(SB)", nil)
 }
