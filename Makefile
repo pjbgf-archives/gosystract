@@ -59,7 +59,7 @@ go-clean:
 
 go-test:
 	@echo "  >  Running tests"
-	@GOPATH=$(GOPATH) GOBIN=$(GOBIN) go test ./...
+	@GOPATH=$(GOPATH) GOBIN=$(GOBIN) go test ./... -race
 
 go-test-coverage:
 	@echo "  >  Running tests"

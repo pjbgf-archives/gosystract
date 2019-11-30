@@ -6,20 +6,14 @@ import (
 	"io"
 	"regexp"
 	"strconv"
-	"sync"
 
 	"github.com/golang-collections/collections/stack"
 	"github.com/pkg/errors"
 )
 
 var (
-	executableSymbolCalls = []string{"main.main", "main.init.0", "main.init.1"}
-	processedNames        map[string]bool
-	namesMutex            sync.RWMutex
-	processedIDs          map[uint16]bool
-	idsMutex              sync.RWMutex
-
-	symbols map[string]symbolDefinition
+	executableSymbolCalls                             = []string{"main.main", "main.init.0", "main.init.1"}
+	symbols               map[string]symbolDefinition = make(map[string]symbolDefinition)
 )
 
 const (
@@ -39,11 +33,6 @@ type symbolDefinition struct {
 	subCalls   []string
 }
 
-func init() {
-	processedNames, processedIDs = make(map[string]bool), make(map[uint16]bool)
-	symbols = make(map[string]symbolDefinition)
-}
-
 // SourceReader defines the interface for source readers
 type SourceReader interface {
 	GetReader() (io.Reader, error)
@@ -51,7 +40,6 @@ type SourceReader interface {
 
 // Extract returns all system calls made in the execution path of the dumpFile provided.
 func Extract(source SourceReader) ([]SystemCall, error) {
-
 	syscalls := make([]SystemCall, 0)
 	consume := func(id uint16) {
 		syscalls = append(syscalls, SystemCall{
@@ -82,7 +70,7 @@ func isExecutable() bool {
 // kick off process from executable key entry points.
 func processExecutable(consume func(id uint16)) {
 	for _, symbol := range executableSymbolCalls {
-		processDump(symbol, consume)
+		dumpWalker(symbol, consume)
 	}
 }
 
@@ -102,7 +90,6 @@ func parseReader(reader io.Reader) {
 		for found {
 			if scanner.Scan() {
 				line = scanner.Text()
-
 				if isEndOfSymbol(line) {
 					break
 				}
@@ -129,55 +116,29 @@ func parseReader(reader io.Reader) {
 	}
 }
 
-func processDump(symbolName string, consume func(uint16)) {
-	var (
-		sysCallIDs = make(chan uint16)
-		done       = make(chan struct{})
-	)
+func dumpWalker(symbolName string, consume func(uint16)) {
+	pNames, pIDs := make(map[string]bool), make(map[uint16]bool)
 
-	go func() {
-		defer close(sysCallIDs)
-
-		namesMutex.RLock()
-		_, exists := processedNames[symbolName]
-		namesMutex.RUnlock()
-
-		if !exists {
-			namesMutex.Lock()
-			processedNames[symbolName] = true
-			namesMutex.Unlock()
-
-			if s, found := symbols[symbolName]; found {
+	var walk func(symbol string)
+	walk = func(symbol string) {
+		if _, exists := pNames[symbol]; !exists {
+			pNames[symbol] = true
+			if s, found := symbols[symbol]; found {
 				for _, id := range s.syscallIDs {
-					idsMutex.RLock()
-					_, exists := processedIDs[id]
-					idsMutex.RUnlock()
-
-					if !exists {
-						idsMutex.Lock()
-						processedIDs[id] = true
-						idsMutex.Unlock()
-
-						sysCallIDs <- id
+					if _, exists := pIDs[id]; !exists {
+						pIDs[id] = true
+						consume(id)
 					}
 				}
 
 				for _, name := range s.subCalls {
-					processDump(name, consume)
+					walk(name)
 				}
 			}
 		}
-	}()
+	}
 
-	go func() {
-		for i := range sysCallIDs {
-			consume(i)
-		}
-
-		close(done)
-	}()
-
-	<-done
+	walk(symbolName)
 }
 
 func stackSyscallIDIfNecessary(assemblyLine string, s *stack.Stack) {
@@ -187,7 +148,6 @@ func stackSyscallIDIfNecessary(assemblyLine string, s *stack.Stack) {
 }
 
 func tryPopSyscallID(assemblyLine string, s *stack.Stack) (uint16, bool) {
-
 	if s.Len() > 0 && containsSyscall(assemblyLine) {
 		val1 := s.Pop()
 		val2 := s.Pop()
