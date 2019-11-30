@@ -95,7 +95,7 @@ error: invalid syntax
 			return nil, errors.New("could not extract syscalls")
 		},
 		"",
-		true, "\nerror: invalid syntax\n")
+		true, "\nerror: could not extract syscalls\n")
 
 	assertThat("should error for invalid go template syntax",
 		[]string{"gosystract", "--template=\"{{$%£}\"", "filename"},
@@ -103,7 +103,7 @@ error: invalid syntax
 			return []systract.SystemCall{{ID: 1, Name: "abc"}, {ID: 2, Name: "def"}}, nil
 		},
 		"",
-		true, "\nerror: invalid syntax\n")
+		true, "\nerror: invalid go template\n")
 
 	assertThat("should error for invalid go template syntax",
 		[]string{"gosystract", "--template=\"{{.Something}}\"", "filename"},
@@ -111,7 +111,7 @@ error: invalid syntax
 			return []systract.SystemCall{{ID: 1, Name: "abc"}, {ID: 2, Name: "def"}}, nil
 		},
 		"",
-		true, "\nerror: invalid syntax\n")
+		true, "\nerror: invalid go template\n")
 }
 
 func TestRun_SourceReaders(t *testing.T) {

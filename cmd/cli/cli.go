@@ -101,14 +101,14 @@ func Run(stdOut io.Writer, stdErr io.Writer, args []string, extract func(source 
 
 	syscalls, err := extract(sourceReader)
 	if err != nil {
-		printf(stdErr, fmt.Sprintf("\nerror: %s\n", errors.New(invalidSyntaxMessage)))
+		printf(stdErr, fmt.Sprintf("\nerror: %s\n", err))
 		exit(1)
 		return
 	}
 
 	err = writeResults(stdOut, syscalls, customFormat)
 	if err != nil {
-		printf(stdErr, fmt.Sprintf("\nerror: %s\n", errors.New(invalidSyntaxMessage)))
+		printf(stdErr, fmt.Sprintf("\nerror: %s\n", err))
 		exit(1)
 	}
 }
