@@ -23,7 +23,6 @@ gosystrac [flags] filePath
 Flags:
 	--dumpfile, -d    Handles a dump file instead of go executable.
 	--template	  Defines a go template for the results.
-			  Example: --template="{{- range . }}{{printf "%d - %s\n" .ID .Name}}{{- end}}"
 `
 
 	resultGoTemplate string = `{{if . -}}
@@ -81,14 +80,15 @@ Flag options:
 
 --template        Defines a go template for the results.
 */
-func Run(output io.Writer, args []string, extract func(source systract.SourceReader) ([]systract.SystemCall, error),
-	onError func(error)) {
+func Run(stdOut io.Writer, stdErr io.Writer, args []string, extract func(source systract.SourceReader) ([]systract.SystemCall, error),
+	exit func(int)) {
 
 	inputIsDumpFile, customFormat, fileName, err := parseInputValues(args)
 	if err != nil {
 		usage := fmt.Sprintf("gosystract version %s\n%s", gitcommit, usageMessage)
-		_, _ = output.Write([]byte(usage))
-		onError(errors.New(invalidSyntaxMessage))
+		printf(stdErr, usage)
+		printf(stdErr, fmt.Sprintf("\nerror: %s\n", errors.New(invalidSyntaxMessage)))
+		exit(1)
 		return
 	}
 
@@ -101,13 +101,15 @@ func Run(output io.Writer, args []string, extract func(source systract.SourceRea
 
 	syscalls, err := extract(sourceReader)
 	if err != nil {
-		onError(err)
+		printf(stdErr, fmt.Sprintf("\nerror: %s\n", errors.New(invalidSyntaxMessage)))
+		exit(1)
 		return
 	}
 
-	err = writeResults(output, syscalls, customFormat)
+	err = writeResults(stdOut, syscalls, customFormat)
 	if err != nil {
-		onError(err)
+		printf(stdErr, fmt.Sprintf("\nerror: %s\n", errors.New(invalidSyntaxMessage)))
+		exit(1)
 	}
 }
 
@@ -132,4 +134,8 @@ func recoverError(err *error) {
 	if e := recover(); e != nil {
 		*err = errors.New("invalid go template")
 	}
+}
+
+func printf(writer io.Writer, format string, args ...interface{}) {
+	_, _ = writer.Write([]byte(fmt.Sprintf(format, args...)))
 }
