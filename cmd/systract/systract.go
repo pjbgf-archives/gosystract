@@ -9,15 +9,14 @@ import (
 	"sync"
 
 	"github.com/golang-collections/collections/stack"
-	"github.com/pkg/errors"
 )
 
-var executableSymbolCalls = []string{"main.main", "main.init.0", "main.init.1"}
-
 const (
-	symbolDefinitionRegex string = "TEXT.((\\%|\\(|\\)|\\*|[a-zA-Z0-9_.\\/])+)\\b\\("
-	syscallHexIDRegex     string = "MOV(Q|L).\\$0x([0-9a-fA-F]+)"
-	callCaptureRegex      string = ".+CALL.(\\b([a-zA-Z0-9_.\\/]|\\.|\\(\\*[a-zA-Z0-9_.\\/]+\\))+\\b)+"
+	symbolDefinitionRegex     string = "TEXT.((\\%|\\(|\\)|\\*|[a-zA-Z0-9_.\\/])+)\\b\\("
+	initSymbolDefinitionRegex string = "((\\%|\\(|\\)|\\*|[a-zA-Z0-9_.\\/])+\\.init)\\b"
+	syscallHexIDRegex         string = "MOV(Q|L).\\$0x([0-9a-fA-F]+)"
+	callCaptureRegex          string = ".+CALL.(\\b([a-zA-Z0-9_.\\/]|\\.|\\(\\*[a-zA-Z0-9_.\\/]+\\))+\\b)+"
+	syscallCallRegex          string = "SYSCALL|golang.org/x/sys/unix.Syscall|syscall.Syscall"
 )
 
 // SystemCall represents a system call
@@ -46,12 +45,15 @@ func Extract(source SourceReader) ([]SystemCall, error) {
 	defer reader.Close()
 
 	symbols := parseDump(reader)
-	if _, isExe := symbols[executableSymbolCalls[0]]; !isExe {
-		return nil, errors.New("could not find entry point")
-	}
 	syscalls := extractSyscalls(symbols)
 
 	return syscalls, nil
+}
+
+func getEntryPoints(symbols map[string]symbolDefinition) (ep []string) {
+	ep = append(ep, "main.main", "main.init.0", "main.init.1")
+	ep = append(ep, extractInitSymbols(symbols)...)
+	return
 }
 
 // kick off process from executable key entry points.
@@ -59,8 +61,9 @@ func extractSyscalls(symbols map[string]symbolDefinition) []SystemCall {
 	syscallID := make(chan uint16)
 
 	var wg sync.WaitGroup
-	wg.Add(len(executableSymbolCalls))
-	for _, symbol := range executableSymbolCalls {
+	entryPoints := getEntryPoints(symbols)
+	wg.Add(len(entryPoints))
+	for _, symbol := range entryPoints {
 		go func(s string) {
 			dumpWalker(symbols, s, syscallID)
 			wg.Done()
@@ -211,7 +214,7 @@ func extract(assemblyLine, regex string) (string, bool) {
 }
 
 func containsSyscall(assemblyLine string) bool {
-	re := regexp.MustCompile("SYSCALL|golang.org/x/sys/unix.Syscall|syscall.Syscall")
+	re := regexp.MustCompile(syscallCallRegex)
 	captures := re.FindStringSubmatch(assemblyLine)
 
 	return (captures != nil && len(captures) > 0)
@@ -219,4 +222,20 @@ func containsSyscall(assemblyLine string) bool {
 
 func isEndOfSymbol(line string) bool {
 	return (line == "" || line == "\n")
+}
+
+func isInitSymbol(line string) bool {
+	re := regexp.MustCompile(initSymbolDefinitionRegex)
+	captures := re.FindStringSubmatch(line)
+
+	return (captures != nil && len(captures) > 0)
+}
+
+func extractInitSymbols(symbols map[string]symbolDefinition) (initSymbols []string) {
+	for k := range symbols {
+		if isInitSymbol(k) {
+			initSymbols = append(initSymbols, k)
+		}
+	}
+	return
 }

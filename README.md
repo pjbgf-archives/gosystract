@@ -45,31 +45,35 @@ Running against gosystract itself:
 ```console
 $ gosystract $(which gosystract)
 
-14 system calls found:
+18 system calls found:
     sched_yield (24)
     futex (202)
     write (1)
     rt_sigprocmask (14)
     getpid (39)
+    epoll_ctl (233)
     gettid (186)
+    mmap (9)
     tgkill (234)
     rt_sigaction (13)
     exit_group (231)
-    mmap (9)
     madvise (28)
     read (0)
     getpgrp (111)
     arch_prctl (158)
+    readlinkat (267)
+    close (3)
+    fcntl (72)
 ```
 
 Running the sample dump file:
 ```console
-$ gosystract --dump test/keyring.dump
+$ gosystract --dumpfile test/keyring.dump
 
-16 system calls found:
-    read (0)
+20 system calls found:
     sched_yield (24)
     futex (202)
+    read (0)
     write (1)
     rt_sigprocmask (14)
     getpid (39)
@@ -81,6 +85,10 @@ $ gosystract --dump test/keyring.dump
     madvise (28)
     getpgrp (111)
     arch_prctl (158)
+    epoll_ctl (233)
+    readlinkat (267)
+    close (3)
+    fcntl (72)
     add_key (248)
     keyctl (250)
 ```
