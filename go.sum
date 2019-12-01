@@ -2,5 +2,7 @@ github.com/golang-collections/collections v0.0.0-20130729185459-604e922904d3 h1:
 github.com/golang-collections/collections v0.0.0-20130729185459-604e922904d3/go.mod h1:nPpo7qLxd6XL3hWJG/O60sR8ZKfMCiIoNap5GvD12KU=
 github.com/pjbgf/go-test v0.2.2 h1:7EffWC3B6i+ob/zsA9/B6lJq+baL4OqqO08P++t0unA=
 github.com/pjbgf/go-test v0.2.2/go.mod h1:b8ngLHvB0hxPp0hZdyg50o/x4SsRllStbClNV5g/5Vc=
+github.com/pjbgf/go-test v0.2.3 h1:2JTHvy9DCaDL77ICwozUDjcnMJHSaeBRLzOZhh9viv4=
+github.com/pjbgf/go-test v0.2.3/go.mod h1:b8ngLHvB0hxPp0hZdyg50o/x4SsRllStbClNV5g/5Vc=
 github.com/pkg/errors v0.8.1 h1:iURUrRGxPUNPdy5/HRSm+Yj6okJ6UtLINN0Q9M4+h3I=
 github.com/pkg/errors v0.8.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
